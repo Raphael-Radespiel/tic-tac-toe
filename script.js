@@ -1,6 +1,7 @@
 const gameDisplay = document.querySelector('#display');
 
 let isPlayingCPU = false;
+let isFirstPlayerTurn = true;
 
 function setUpSelection(){
   gameDisplay.classList.add('flex-box-one'); 
@@ -48,11 +49,27 @@ function setUpGame(gameMode){
       boardColumn.classList.add('col');
       boardColumn.id = `col-${j}`;
       boardRow.append(boardColumn);  
+
+      // Add eventListener
+      boardColumn.addEventListener('click', e => {updateGame(e.target)});
     }
     gameBoard.append(boardRow);
   }
 
   gameDisplay.append(gameBoard);
+}
+
+function updateGame(selectedSquare){
+  if(isFirstPlayerTurn == true){
+    isFirstPlayerTurn = false;
+    selectedSquare.textContent = 'x';
+    selectedSquare.style.color = 'blue';
+  }
+  else{
+    isFirstPlayerTurn = true;
+    selectedSquare.textContent = 'o';
+    selectedSquare.style.color = 'red';
+  }
 }
 
 function clearDisplay(){
