@@ -17,9 +17,9 @@ function setUpSelection(){
 
   gameDisplay.append(divLeft, divMiddle, divRight);
 
-  divLeft.addEventListener('click', () => setUpGame(false), {once: true});
-  divMiddle.addEventListener('click', () => setUpGame(false), {once: true});
-  divRight.addEventListener('click', () => setUpGame(true), {once: true});
+  divLeft.addEventListener('click', () => setUpGame(0), {once: true});
+  divMiddle.addEventListener('click', () => setUpGame(1), {once: true});
+  divRight.addEventListener('click', () => setUpGame(2), {once: true});
 }
 
 function setUpGame(mode){ 
