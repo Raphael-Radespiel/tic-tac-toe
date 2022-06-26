@@ -50,6 +50,31 @@ function setUpGame(gameMode){
       boardColumn.id = `col-${j}`;
       boardRow.append(boardColumn);  
 
+      switch(i){
+        case 0:
+          boardColumn.style.borderBottom = '4px solid black';
+          break;
+        case 1:
+          boardColumn.style.borderBottom = '4px solid black';
+          boardColumn.style.borderTop = '4px solid black';
+          break;
+        case 2:
+          boardColumn.style.borderTop = '4px solid black';
+          break;
+      }
+
+      switch(j){        
+        case 0:
+          boardColumn.style.borderRight = '4px solid black';
+          break;
+        case 1:
+          boardColumn.style.borderRight = '4px solid black';
+          boardColumn.style.borderLeft = '4px solid black';
+          break;
+        case 2:
+          boardColumn.style.borderLeft = '4px solid black';
+          break;
+      }
       // Add eventListener
       boardColumn.addEventListener('click', e => {updateGame(e.target)});
     }
@@ -70,6 +95,8 @@ function updateGame(selectedSquare){
     selectedSquare.textContent = 'o';
     selectedSquare.style.color = 'red';
   }
+  
+  selectedSquare.removeEventListener('click', updateGame(e.target)); 
 }
 
 function clearDisplay(){
