@@ -1,5 +1,1 @@
-- Make the stylesheet media queries one single thing and organize them into sections
-- Remove the square borders and add them in the javascript depending on their location in the array
-- Fix the event listener and make it run once
 - Add a turn number (to check for wins) and make it alternate between players that start
-- Make the selection break every word and add "Human vs Smart Computer" and "Human vs not-so-smart Computer"

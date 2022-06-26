@@ -1,6 +1,6 @@
 const gameDisplay = document.querySelector('#display');
 
-let isPlayingCPU = false;
+let gameMode = 0;
 let isFirstPlayerTurn = true;
 
 function setUpSelection(){
@@ -8,18 +8,21 @@ function setUpSelection(){
   gameDisplay.classList.remove('flex-box-two');
 
   let divLeft = document.createElement('div');
+  let divMiddle = document.createElement('div');
   let divRight = document.createElement('div');
   
-  divLeft.textContent = 'Human vs Human';
-  divRight.textContent = 'Human vs Computer';
+  divLeft.innerHTML = 'Human<br>vs<br>Human';
+  divMiddle.innerHTML = 'Human<br>vs<br>Smart<br>Computer';
+  divRight.innerHTML = 'Human<br>vs<br>not-so-smart<br>Computer';
 
-  gameDisplay.append(divLeft, divRight);
+  gameDisplay.append(divLeft, divMiddle, divRight);
 
-  divLeft.addEventListener('click', () => setUpGame(false));
-  divRight.addEventListener('click', () => setUpGame(true));
+  divLeft.addEventListener('click', () => setUpGame(false), {once: true});
+  divMiddle.addEventListener('click', () => setUpGame(false), {once: true});
+  divRight.addEventListener('click', () => setUpGame(true), {once: true});
 }
 
-function setUpGame(gameMode){ 
+function setUpGame(mode){ 
   // Adjust class of display
   gameDisplay.classList.add('flex-box-two');
   gameDisplay.classList.remove('flex-box-one');
@@ -28,11 +31,20 @@ function setUpGame(gameMode){
   clearDisplay();
 
   // Sets game mode and corresponding text
-  (gameMode) ? isPlayingCPU = true : isPlayingCPU = false;
+  gameMode = mode;
 
   let divMode = document.createElement('div');
-  (isPlayingCPU) ? divMode.textContent = 'Human vs Computer' : 
+  switch(gameMode){
+    case 0:
       divMode.textContent = 'Human vs Human';
+      break;
+    case 1:
+      divMode.textContent = 'Human vs Smart Computer';
+      break;
+    case 2:
+      divMode.textContent = 'Human vs not-so-smart Computer';
+      break;
+  } 
 
   gameDisplay.append(divMode);
 
@@ -75,8 +87,9 @@ function setUpGame(gameMode){
           boardColumn.style.borderLeft = '4px solid black';
           break;
       }
+
       // Add eventListener
-      boardColumn.addEventListener('click', e => {updateGame(e.target)});
+      boardColumn.addEventListener('click',updateGame, {once: true});
     }
     gameBoard.append(boardRow);
   }
@@ -84,19 +97,17 @@ function setUpGame(gameMode){
   gameDisplay.append(gameBoard);
 }
 
-function updateGame(selectedSquare){
+function updateGame(){
   if(isFirstPlayerTurn == true){
     isFirstPlayerTurn = false;
-    selectedSquare.textContent = 'x';
-    selectedSquare.style.color = 'blue';
+    this.textContent = 'x';
+    this.style.color = 'blue';
   }
   else{
     isFirstPlayerTurn = true;
-    selectedSquare.textContent = 'o';
-    selectedSquare.style.color = 'red';
+    this.textContent = 'o';
+    this.style.color = 'red';
   }
-  
-  selectedSquare.removeEventListener('click', updateGame(e.target)); 
 }
 
 function clearDisplay(){
