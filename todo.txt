@@ -1,1 +1,2 @@
 - Add a turn number (to check for wins) and make it alternate between players that start
+- Add the win condition check

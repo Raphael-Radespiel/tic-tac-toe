@@ -2,8 +2,16 @@ const gameDisplay = document.querySelector('#display');
 
 let gameMode = 0;
 let isFirstPlayerTurn = true;
+let turnNum = 0;
+let gameArray = 
+[['','',''],
+['','',''],
+['','','']];
+let playerScores = [0,0];
 
 function setUpSelection(){
+  clearDisplay();
+
   gameDisplay.classList.add('flex-box-one'); 
   gameDisplay.classList.remove('flex-box-two');
 
@@ -61,35 +69,21 @@ function setUpGame(mode){
       boardColumn.classList.add('col');
       boardColumn.id = `col-${j}`;
       boardRow.append(boardColumn);  
+      
+      // Set border style for tic tac toe grid
+      boardColumn.style.borderBottom = '4px solid black'; 
+      boardColumn.style.borderTop = '4px solid black'; 
+      boardColumn.style.borderRight = '4px solid black';
+      boardColumn.style.borderLeft = '4px solid black';
+      
+      if(i == 0) boardColumn.style.borderTop = '';
+      else if(i == 2) boardColumn.style.borderBottom = '';
 
-      switch(i){
-        case 0:
-          boardColumn.style.borderBottom = '4px solid black';
-          break;
-        case 1:
-          boardColumn.style.borderBottom = '4px solid black';
-          boardColumn.style.borderTop = '4px solid black';
-          break;
-        case 2:
-          boardColumn.style.borderTop = '4px solid black';
-          break;
-      }
+      if(j == 0) boardColumn.style.borderLeft = '';
+      else if(j == 2) boardColumn.style.borderRight = '';
 
-      switch(j){        
-        case 0:
-          boardColumn.style.borderRight = '4px solid black';
-          break;
-        case 1:
-          boardColumn.style.borderRight = '4px solid black';
-          boardColumn.style.borderLeft = '4px solid black';
-          break;
-        case 2:
-          boardColumn.style.borderLeft = '4px solid black';
-          break;
-      }
-
-      // Add eventListener
-      boardColumn.addEventListener('click',updateGame, {once: true});
+      // Add eventListener 
+      boardColumn.addEventListener('click', updateGame, {once: true});
     }
     gameBoard.append(boardRow);
   }
@@ -102,16 +96,106 @@ function updateGame(){
     isFirstPlayerTurn = false;
     this.textContent = 'x';
     this.style.color = 'blue';
+    gameArray[this.parentNode.id.replace('row-', '')][this.id.replace('col-', '')] = 'x';
   }
   else{
     isFirstPlayerTurn = true;
     this.textContent = 'o';
     this.style.color = 'red';
+    gameArray[this.parentNode.id.replace('row-', '')][this.id.replace('col-', '')] = 'o';
+  }
+
+  turnNum++;
+
+  if(turnNum >= 5){
+    if(checkGameState() != 'ongoing'){
+      clearDisplay();
+      gameArray = [['','',''],
+                   ['','',''],
+                   ['','','']];
+      turnNum = 0;
+      playerScores = [0,0];
+
+      setUpScore(checkGameState());
+    }
   }
 }
 
 function clearDisplay(){
   gameDisplay.innerHTML = '';
+}
+
+function checkGameState(){
+  let strBeingChecked = '';
+  (isFirstPlayerTurn) ? strBeingChecked = 'o' : strBeingChecked = 'x';
+  // Check horizontal/vertical win
+  for(let i = 0; i < 3; i++){
+    if(gameArray[i][0] == strBeingChecked && 
+      gameArray[i][1] == strBeingChecked && 
+      gameArray[i][2] == strBeingChecked){
+      return strBeingChecked;
+    }
+    if(gameArray[0][i] == strBeingChecked && 
+      gameArray[1][i] == strBeingChecked && 
+      gameArray[2][i] == strBeingChecked){
+      return strBeingChecked;
+    }
+  }
+
+  // check diagonal win
+  if(gameArray[0][0] == strBeingChecked &&
+    gameArray[1][1] == strBeingChecked &&
+    gameArray[2][2] == strBeingChecked){
+    return strBeingChecked;
+  }
+  if(gameArray[2][0] == strBeingChecked &&
+    gameArray[1][1] == strBeingChecked &&
+    gameArray[0][2] == strBeingChecked){
+    return strBeingChecked;
+  }
+
+  if(turnNum == 9) return 'tie';
+  else return 'ongoing'; 
+}
+
+function setUpScore(scoreCondition){
+  let winCondition = document.createElement('div'); 
+  let playerScoreDiv = document.createElement('div'); 
+  let resetButton = document.createElement('div');
+  let newTurnButton = document.createElement('div');
+  let lowerPageButtons = document.createElement('div');
+
+  switch(scoreCondition){
+    case 'x':
+      winCondition.textContent = 'x won!';
+      winCondition.id = 'x-win';
+      playerScores[0]++;
+      break;
+    case 'o':
+      winCondition.textContent = 'o won!';
+      winCondition.id = 'o-win';
+      playerScores[1]++;
+      break;
+    case 'tie':
+      winCondition.textContent = 'its a tie!';
+      winCondition.id = 'tie';
+      break;
+  }
+  
+  winCondition.classList.add('win-display');
+  playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong><p> - </p><strong style="color:red;">${playerScores[1]}</strong>`; 
+  playerScoreDiv.id = 'player-score';
+  
+  let eventSetUpGame = function(){setUpGame(gameMode);};
+
+  newTurnButton.textContent = 'New Turn';
+  newTurnButton.addEventListener('click', eventSetUpGame, {once: true});
+  resetButton.textContent = 'Reset';
+  resetButton.addEventListener('click', setUpSelection, {once: true});
+  lowerPageButtons.id = 'lower-page-buttons';
+  lowerPageButtons.append(newTurnButton, resetButton);
+  
+  gameDisplay.append(winCondition, playerScoreDiv, lowerPageButtons);
 }
 
 setUpSelection();

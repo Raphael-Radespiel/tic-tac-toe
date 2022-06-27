@@ -61,6 +61,8 @@ header h1{
   justify-content:center;
   font-size: 10rem;
   font-family: sans-serif;
+  user-select: none; 
+  cursor: pointer;
 }
 
 /* Media Queries
@@ -95,4 +97,61 @@ header h1{
     height: 33vh;
     font-size: 33vh;
   }
+}
+
+/* Game Condition
+------------------------------*/
+.win-display#x-win{
+  font-weight:900;
+  font-size:4rem;
+  margin: 0rem 0rem 2rem 0rem; 
+  color: blue;
+  font-family: sans-serif;
+  font-style: bold;
+}
+
+.win-display#o-win{
+  font-weight:900;
+  font-size:4rem;
+  margin: 0rem 0rem 2rem 0rem; 
+  color: red;
+  font-family: sans-serif;
+  font-style: bold;
+}
+
+.win-display#tie{
+  font-weight:900;
+  font-size:4rem;
+  margin: 0rem 0rem 2rem 0rem; 
+  color: black;
+  font-family: sans-serif;
+  font-style: bold;
+}
+
+#player-score{
+	display: flex;
+	justify-content: center;
+	font-size: 3rem;
+	letter-spacing: 2rem;
+}
+
+#lower-page-buttons{
+	display: flex;
+	justify-content: center;
+	width: 60vw;
+	margin: auto;
+	padding: 2rem;
+  gap: 2vw;
+  flex-wrap: wrap;
+}
+
+#lower-page-buttons div{
+	background-color: #d5d5d5;
+	flex: 1 1 100%;
+	text-align: center;
+	font-size: 1.5rem;
+	padding: 2vh;
+	border: 2px solid black;
+	border-radius: 15px;
+  cursor: pointer;
 }
