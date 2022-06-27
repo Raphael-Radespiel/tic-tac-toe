@@ -12,6 +12,13 @@ let playerScores = [0,0];
 function setUpSelection(){
   clearDisplay();
 
+  // reset game variables
+  playerScores = [0,0];
+  gameArray = [['','',''],
+               ['','',''],
+               ['','','']]; 
+  turnNum = 0;
+
   gameDisplay.classList.add('flex-box-one'); 
   gameDisplay.classList.remove('flex-box-two');
 
@@ -109,13 +116,6 @@ function updateGame(){
 
   if(turnNum >= 5){
     if(checkGameState() != 'ongoing'){
-      clearDisplay();
-      gameArray = [['','',''],
-                   ['','',''],
-                   ['','','']];
-      turnNum = 0;
-      playerScores = [0,0];
-
       setUpScore(checkGameState());
     }
   }
@@ -186,7 +186,13 @@ function setUpScore(scoreCondition){
   playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong><p> - </p><strong style="color:red;">${playerScores[1]}</strong>`; 
   playerScoreDiv.id = 'player-score';
   
-  let eventSetUpGame = function(){setUpGame(gameMode);};
+  let eventSetUpGame = function(){ 
+    gameArray = [['','',''],
+                 ['','',''],
+                 ['','','']]; 
+    turnNum = 0;
+    setUpGame(gameMode);
+  };
 
   newTurnButton.textContent = 'New Turn';
   newTurnButton.addEventListener('click', eventSetUpGame, {once: true});
