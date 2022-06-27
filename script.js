@@ -116,6 +116,7 @@ function updateGame(){
 
   if(turnNum >= 5){
     if(checkGameState() != 'ongoing'){
+      clearDisplay();
       setUpScore(checkGameState());
     }
   }
@@ -159,6 +160,12 @@ function checkGameState(){
 }
 
 function setUpScore(scoreCondition){
+  // reset game variables
+  gameArray = [['','',''],
+               ['','',''],
+               ['','','']]; 
+  turnNum = 0;
+  
   let winCondition = document.createElement('div'); 
   let playerScoreDiv = document.createElement('div'); 
   let resetButton = document.createElement('div');
@@ -187,10 +194,6 @@ function setUpScore(scoreCondition){
   playerScoreDiv.id = 'player-score';
   
   let eventSetUpGame = function(){ 
-    gameArray = [['','',''],
-                 ['','',''],
-                 ['','','']]; 
-    turnNum = 0;
     setUpGame(gameMode);
   };
 
