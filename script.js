@@ -2,26 +2,24 @@ const gameDisplay = document.querySelector('#display');
 
 let gameMode = 0;
 let isFirstPlayerTurn = true;
-let turnNum = 0;
-let gameArray = 
-[['','',''],
-['','',''],
-['','','']];
+let turnCount = 0;
+let gameArray = [['','',''],['','',''],['','','']];
 let playerScores = [0,0];
 
 function setUpSelection(){
-  clearDisplay();
+  clearDisplayDiv();
 
-  // reset game variables
+  // Reset the Game's variables
+  isFirstPlayerTurn = true;
   playerScores = [0,0];
-  gameArray = [['','',''],
-               ['','',''],
-               ['','','']]; 
-  turnNum = 0;
+  gameArray = [['','',''],['','',''],['','','']]; 
+  turnCount = 0;
 
+  // Set the correct display class
   gameDisplay.classList.add('flex-box-one'); 
   gameDisplay.classList.remove('flex-box-two');
 
+  // Create, set content and listen to these game-mode selector divs
   let divLeft = document.createElement('div');
   let divMiddle = document.createElement('div');
   let divRight = document.createElement('div');
@@ -30,51 +28,44 @@ function setUpSelection(){
   divMiddle.innerHTML = 'Human<br>vs<br>Smart<br>Computer';
   divRight.innerHTML = 'Human<br>vs<br>not-so-smart<br>Computer';
 
-  gameDisplay.append(divLeft, divMiddle, divRight);
-
   divLeft.addEventListener('click', () => setUpGame(0), {once: true});
   divMiddle.addEventListener('click', () => setUpGame(1), {once: true});
   divRight.addEventListener('click', () => setUpGame(2), {once: true});
+  
+  gameDisplay.append(divLeft, divMiddle, divRight);
 }
 
 function setUpGame(mode){ 
-  // Adjust class of display
-  gameDisplay.classList.add('flex-box-two');
-  gameDisplay.classList.remove('flex-box-one');
-
-  // Removes previous state's elements
-  clearDisplay();
+  clearDisplayDiv();
 
   // Sets game mode and corresponding text
   gameMode = mode;
+  
+  // Set the correct display class
+  gameDisplay.classList.add('flex-box-two');
+  gameDisplay.classList.remove('flex-box-one');
 
+  // Create the game-mode display text
   let divMode = document.createElement('div');
-  switch(gameMode){
-    case 0:
-      divMode.textContent = 'Human vs Human';
-      break;
-    case 1:
-      divMode.textContent = 'Human vs Smart Computer';
-      break;
-    case 2:
-      divMode.textContent = 'Human vs not-so-smart Computer';
-      break;
-  } 
+  if(gameMode == 0) divMode.textContent = 'Human vs Human';
+  else if(gameMode == 1) divMode.textContent = 'Human vs Smart Computer';
+  else divMode.textContent = 'Human vs not-so-smart Computer';
 
-  gameDisplay.append(divMode);
-
-  // Creates the tic-tac-toe board
+  // Creates the Tic-Tac-Toe game-board
   let gameBoard = document.createElement('div');
   gameBoard.classList.add('board-game');
 
   for(let i = 0; i < 3; i++){  
+    // create row div
     let boardRow = document.createElement('div');
     boardRow.classList.add('row');
-    boardRow.id = `row-${i}`;
+    boardRow.id = `${i}`;
+
     for(let j = 0; j < 3; j++){
+      // create column div
       let boardColumn = document.createElement('div');
       boardColumn.classList.add('col');
-      boardColumn.id = `col-${j}`;
+      boardColumn.id = `${j}`;
       boardRow.append(boardColumn);  
       
       // Set border style for tic tac toe grid
@@ -92,13 +83,18 @@ function setUpGame(mode){
       // Add eventListener 
       boardColumn.addEventListener('click', updateGame, {once: true});
     }
+
     gameBoard.append(boardRow);
   }
 
-  gameDisplay.append(gameBoard);
+  gameDisplay.append(divMode, gameBoard);
 }
 
 function updateGame(){
+  // Update the turn count
+  turnCount++;
+
+  // Display the player symbol and update the Tic-Tac-Toe game array
   if(isFirstPlayerTurn == true){
     isFirstPlayerTurn = false;
     this.textContent = 'x';
@@ -109,99 +105,94 @@ function updateGame(){
     isFirstPlayerTurn = true;
     this.textContent = 'o';
     this.style.color = 'red';
-    gameArray[this.parentNode.id.replace('row-', '')][this.id.replace('col-', '')] = 'o';
+    gameArray[this.parentNode.id][this.id] = 'o';
   }
 
-  turnNum++;
-
-  if(turnNum >= 5){
-    if(checkGameState() != 'ongoing'){
-      clearDisplay();
-      setUpScore(checkGameState());
-    }
+  // After the 5th turn, check if the game is in a tie or a win
+  if(turnCount >= 5 && checkGameState() != 'ongoing'){
+    setUpScore(checkGameState());
   }
 }
 
-function clearDisplay(){
+function clearDisplayDiv(){
   gameDisplay.innerHTML = '';
 }
 
 function checkGameState(){
-  let strBeingChecked = '';
-  (isFirstPlayerTurn) ? strBeingChecked = 'o' : strBeingChecked = 'x';
+
+  let playerValue = isFirstPlayerTurn ? 'o' : 'x';
+  
   // Check horizontal/vertical win
   for(let i = 0; i < 3; i++){
-    if(gameArray[i][0] == strBeingChecked && 
-      gameArray[i][1] == strBeingChecked && 
-      gameArray[i][2] == strBeingChecked){
-      return strBeingChecked;
+    if(gameArray[i][0] == playerValue && 
+      gameArray[i][1] == playerValue && 
+      gameArray[i][2] == playerValue){
+      return playerValue;
     }
-    if(gameArray[0][i] == strBeingChecked && 
-      gameArray[1][i] == strBeingChecked && 
-      gameArray[2][i] == strBeingChecked){
-      return strBeingChecked;
+    if(gameArray[0][i] == playerValue && 
+      gameArray[1][i] == playerValue && 
+      gameArray[2][i] == playerValue){
+      return playerValue;
     }
   }
 
-  // check diagonal win
-  if(gameArray[0][0] == strBeingChecked &&
-    gameArray[1][1] == strBeingChecked &&
-    gameArray[2][2] == strBeingChecked){
-    return strBeingChecked;
+  // Check diagonal win
+  if(gameArray[0][0] == playerValue &&
+    gameArray[1][1] == playerValue &&
+    gameArray[2][2] == playerValue){
+    return playerValue;
   }
-  if(gameArray[2][0] == strBeingChecked &&
-    gameArray[1][1] == strBeingChecked &&
-    gameArray[0][2] == strBeingChecked){
-    return strBeingChecked;
+  if(gameArray[2][0] == playerValue &&
+    gameArray[1][1] == playerValue &&
+    gameArray[0][2] == playerValue){
+    return playerValue;
   }
 
-  if(turnNum == 9) return 'tie';
-  else return 'ongoing'; 
+  // If it isn't a win, it's ongoing. If the board is filled up, it's a tie
+  return turnCount == 9 ? 'tie' : 'ongoing';
 }
 
 function setUpScore(scoreCondition){
-  // reset game variables
+  clearDisplayDiv();
+
+  // Reset the board variables 
   gameArray = [['','',''],
                ['','',''],
                ['','','']]; 
-  turnNum = 0;
+  turnCount = 0;
   
+  // score display elements
   let winCondition = document.createElement('div'); 
   let playerScoreDiv = document.createElement('div'); 
+  
+  // Button elements
   let resetButton = document.createElement('div');
   let newTurnButton = document.createElement('div');
   let lowerPageButtons = document.createElement('div');
 
-  switch(scoreCondition){
-    case 'x':
-      winCondition.textContent = 'x won!';
-      winCondition.id = 'x-win';
-      playerScores[0]++;
-      break;
-    case 'o':
-      winCondition.textContent = 'o won!';
-      winCondition.id = 'o-win';
-      playerScores[1]++;
-      break;
-    case 'tie':
-      winCondition.textContent = 'its a tie!';
-      winCondition.id = 'tie';
-      break;
+  // Set the score condition and add to the winning player's score
+  winCondition.classList.add('win-display');
+  if(scoreCondition == 'tie'){
+    winCondition.textContent = 'its a tie!';
+    winCondition.id = 'tie';
+  }
+  else{
+    winCondition.textContent = `${scoreCondition} won!`;
+    winCondition.id = `${scoreCondition}-win`;
+    scoreCondition == 'x' ? playerScores[0]++ : playerScores[1]++;
   }
   
-  winCondition.classList.add('win-display');
-  playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong><p> - </p><strong style="color:red;">${playerScores[1]}</strong>`; 
+  playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong>
+    <p> - </p><strong style="color:red;">${playerScores[1]}</strong>`;
   playerScoreDiv.id = 'player-score';
   
-  let eventSetUpGame = function(){ 
-    setUpGame(gameMode);
-  };
-
   newTurnButton.textContent = 'New Turn';
-  newTurnButton.addEventListener('click', eventSetUpGame, {once: true});
   resetButton.textContent = 'Reset';
-  resetButton.addEventListener('click', setUpSelection, {once: true});
   lowerPageButtons.id = 'lower-page-buttons';
+
+  newTurnButton.addEventListener('click', () => {setUpGame(gameMode)}, {once: true});
+  resetButton.addEventListener('click', setUpSelection, {once: true});
+
   lowerPageButtons.append(newTurnButton, resetButton);
   
   gameDisplay.append(winCondition, playerScoreDiv, lowerPageButtons);
