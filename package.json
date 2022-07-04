@@ -1,0 +1,22 @@
+{
+  "name": "tic-tac-toe",
+  "version": "1.0.0",
+  "description": "This project's intention is for it to be a place where I practice some recent things that I've learned. - Javascript    - DOM manipulation   - DOM traversal   - Event handling - CSS   - Responsive design   - flexbox",
+  "main": "script.js",
+  "scripts": {
+    "test": "jest --watchAll --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raphael-Radespiel/tic-tac-toe.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Raphael-Radespiel/tic-tac-toe/issues"
+  },
+  "homepage": "https://github.com/Raphael-Radespiel/tic-tac-toe#readme",
+  "dependencies": {
+    "jest": "^28.1.2"
+  }
+}
