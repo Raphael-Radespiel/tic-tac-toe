@@ -6,6 +6,9 @@ let turnCount = 0;
 let gameBoard = [['','',''],['','',''],['','','']];
 let playerScores = [0,0];
 
+////////////////////////////////////////////////
+// Functions that set up and return html divs //
+////////////////////////////////////////////////
 function setUpSelection() {
   resetDisplay();
 
@@ -23,7 +26,7 @@ function setUpSelection() {
   }
 }
 
-function setUpGame(){ 
+function setUpGame() { 
   resetDisplay();
 
   gameDisplay.classList.add('flex-box-two');
@@ -31,6 +34,26 @@ function setUpGame(){
 
 
   gameDisplay.append(getGameModeText(), getGameBoard());
+}
+
+function setUpScore(scoreCondition){ 
+  resetDisplay();
+
+  gameBoard = [['','',''],['','',''],['','','']]; 
+  turnCount = 0;  
+
+  if(scoreCondition == 'x') {
+    playerScores[0]++;
+  }
+  else if(scoreCondition == 'o') {
+    playerScores[1]++;
+  }
+
+  for(let i = 0; i < 2; i++) {
+    gameDisplay.append(getGameScore(scoreCondition)[i]);
+  }
+
+  gameDisplay.append(getGameOptionButtons());
 }
 
 function getSelectionMode() { 
@@ -42,9 +65,12 @@ function getSelectionMode() {
   divMiddle.innerHTML = 'Human<br>vs<br>Smart<br>Computer';
   divRight.innerHTML = 'Human<br>vs<br>not-so-smart<br>Computer';
 
-  divLeft.addEventListener('click', () => setUpGame(0), {once: true});
-  divMiddle.addEventListener('click', () => setUpGame(1), {once: true});
-  divRight.addEventListener('click', () => setUpGame(2), {once: true});
+  divLeft.addEventListener('click', () => 
+    {setUpGame();gameMode = 0;}, {once: true});
+  divMiddle.addEventListener('click', () => 
+    {setUpGame();gameMode = 1;}, {once: true});
+  divRight.addEventListener('click', () => 
+    {setUpGame();gameMode = 2;}, {once: true});
 
   return [divLeft, divMiddle, divRight];
 }
@@ -92,114 +118,31 @@ function getGameBoard() {
   return gameBoard;
 }
 
-function updateGame(){
-  // Update the turn count
-  turnCount++;
-
-  // Display the player symbol and update the Tic-Tac-Toe game array
-  if(gameMode == 0){
-    if(isPlayerOneTurn == true){
-      isPlayerOneTurn = false;
-      this.textContent = 'x';
-      this.style.color = 'blue';
-      gameBoard[this.parentNode.id][this.id] = 'x';
-    }
-    else{
-      isPlayerOneTurn = true;
-      this.textContent = 'o';
-      this.style.color = 'red';
-      gameBoard[this.parentNode.id][this.id] = 'o';
-    }
-  }
-  else if(gameMode == 1){ 
-    if(isPlayerOneTurn == true){
-      isPlayerOneTurn = false;
-      this.textContent = 'x';
-      this.style.color = 'blue';
-      gameBoard[this.parentNode.id][this.id] = 'x';
-
-      gameBoard = bestMove();
-      console.log(gameBoard);
-      isPlayerOneTurn = true; 
-    }
-  }
-
-  // After the 5th turn, check if the game is in a tie or a win
-  if(turnCount >= 5 && checkGameState(gameBoard, turnCount) != 'ongoing'){ 
-    setUpScore(checkGameState(gameBoard, turnCount));
-  }
-}
-
-function resetDisplay(){
-  gameDisplay.innerHTML = '';
-}
-
-function checkGameState(board, turn){
- let newBoard = JSON.parse(JSON.stringify(board));
-  // Check horizontal/vertical win
-  for(let i = 0; i < 3; i++){
-    if(newBoard[i][0] == newBoard[i][1] && newBoard[i][1] == newBoard[i][2]){
-      if(newBoard[i][0] != ''){
-        console.log(toString(newBoard[i][0]));
-        return toString(newBoard[i][0]);
-      }
-    }
-    if(newBoard[0][i] == newBoard[1][i] && newBoard[1][i] ==  newBoard[2][i]){
-      if(newBoard[0][i] != ''){
-        console.log(toString(newBoard[0][i]));
-        return toString(newBoard[0][i]);
-      }
-    }
-  }
-
-  // Check diagonal win
-  if((newBoard[0][0] == newBoard[1][1] && newBoard[1][1] == newBoard[2][2]) || 
-    (newBoard[2][0] == newBoard[1][1] && newBoard[1][1] == newBoard[0][2])){ 
-    if(newBoard[1][1] != ''){
-      console.log(toString(newBoard[1][1]));
-      return toString(newBoard[1][1]);
-    }
-  }
-
-  // If it isn't a win, it's ongoing. If the newBoard is filled up, it's a tie
-  let finalValue = (turn == 9) ? 'tie' : 'ongoing';
-  console.log(finalValue);
-  return finalValue;
-}
-
-function setUpScore(scoreCondition){
-  resetDisplay();
-
-  // Reset the board variables 
-  gameBoard = [['','',''],
-               ['','',''],
-               ['','','']]; 
-  turnCount = 0;
-  
-  // score display elements
+function getGameScore(gameOutcome) {
   let winCondition = document.createElement('div'); 
   let playerScoreDiv = document.createElement('div'); 
-  
-  // Button elements
-  let resetButton = document.createElement('div');
-  let newTurnButton = document.createElement('div');
-  let lowerPageButtons = document.createElement('div');
 
-  // Set the score condition and add to the winning player's score
   winCondition.classList.add('win-display');
-  if(scoreCondition == 'tie'){
+  if(gameOutcome == 'tie'){
     winCondition.textContent = 'its a tie!';
     winCondition.id = 'tie';
   }
   else{
-    winCondition.textContent = `${scoreCondition} won!`;
-    winCondition.id = `${scoreCondition}-win`;
-    scoreCondition == 'x' ? playerScores[0]++ : playerScores[1]++;
+    winCondition.textContent = `${gameOutcome} won!`;
+    winCondition.id = `${gameOutcome}-win`;
   }
-  
+
   playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong>
     <p> - </p><strong style="color:red;">${playerScores[1]}</strong>`;
   playerScoreDiv.id = 'player-score';
+
+  return [winCondition, playerScoreDiv];
+}
+
+function getGameOptionButtons() {
+  let resetButton = document.createElement('div');
+  let newTurnButton = document.createElement('div');
+  let lowerPageButtons = document.createElement('div');
   
   newTurnButton.textContent = 'New Turn';
   resetButton.textContent = 'Reset';
@@ -209,104 +152,154 @@ function setUpScore(scoreCondition){
   resetButton.addEventListener('click', setUpSelection, {once: true});
 
   lowerPageButtons.append(newTurnButton, resetButton);
-  
-  gameDisplay.append(winCondition, playerScoreDiv, lowerPageButtons);
+
+  return lowerPageButtons;
 }
 
-function minmax(board, depth, isMaximizer){
+function resetDisplay() {
+  gameDisplay.innerHTML = '';
+}
+ 
+////////////////////////////////////////////////////////////////////
+// Functions related to game mechanics and artificial inteligence //
+////////////////////////////////////////////////////////////////////
+function updateGame() {
+  turnCount++;
+
+  let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
+
+  switch(gameMode){
+    case 0:
+      // Display the player symbol and update the Tic-Tac-Toe game array
+      if(isPlayerOneTurn == true){
+        isPlayerOneTurn = false;
+        this.textContent = playerSymbol;
+        this.style.color = 'blue';
+        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+      }
+      else{
+        isPlayerOneTurn = true;
+        this.textContent = playerSymbol;
+        this.style.color = 'red';
+        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+      }
+      break;
+    case 1:
+      if(isPlayerOneTurn == true){
+        isPlayerOneTurn = false;
+        this.textContent = playerSymbol;
+        this.style.color = 'blue';
+        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+
+        let bestMove = miniMax(gameBoard, turnCount, true);
+        gameBoard = bestMove.pathChosen;
+        console.log(gameBoard);
+        isPlayerOneTurn = true; 
+      }
+      break;
+  }
+
+  if(turnCount >= 5 && 
+    checkGameState(gameBoard, turnCount, playerSymbol) != 'ongoing') { 
+    setUpScore(checkGameState(gameBoard, turnCount, playerSymbol));
+  }
+}
+
+function checkGameState(board, turn, playerValue){
+  // Check horizontal/vertical win
+  for(let i = 0; i < 3; i++){
+    if(board[i][0] == board[i][1] && board[i][1] == board[i][2] && 
+      board[i][0] == playerValue){
+      return playerValue;
+    }
+    if(board[0][i] == board[1][i] && board[1][i] ==  board[2][i] && 
+      board[0][i] == playerValue){
+      return playerValue;
+    }
+  }
+
+  // Check diagonal win
+  if((board[0][0] == board[1][1] && board[1][1] == board[2][2]) || 
+    (board[2][0] == board[1][1] && board[1][1] == board[0][2])){ 
+    if(board[1][1] == playerValue){
+      return playerValue;
+    }
+  }
+
+  // If it isn't a win, it's ongoing. If the board is filled up, it's a tie
+  let finalValue = (turn == 9) ? 'tie' : 'ongoing';
+  return finalValue;
+}
+
+function miniMax(node, depth, isMaximizer){
   let winValues = {
     x: -1,
     o: 1,
     tie: 0
   };
-
-  let newBoard = JSON.parse(JSON.stringify(board));
-  console.log('board value: ');
-  console.log(newBoard);
   
-  let gameStateValue = checkGameState(newBoard, depth);
-  console.log(gameStateValue);
+  let pathWithScore = {
+    pathChosen: [],
+    score: 0
+  };
 
-  if(depth == 9 || gameStateValue != 'ongoing'){
-    let score = winValues[checkGameState(newBoard, depth)]; 
-    console.log('board value: ');
-    console.log(newBoard);
-    console.log('returning: ' + score + ' at depth: ' + depth);
-    return score / depth; // divide by depth so it has incentive to win faster
+  let gameBoard = JSON.parse(JSON.stringify(node));
+  
+  let playerSymbol = isMaximizer ? 'o' : 'x';
+
+  let possibleMoves = getPossibleMoves(gameBoard, playerSymbol);
+
+  playerSymbol = isMaximizer ? 'x' : 'o';
+
+  let gameStateValue = checkGameState(gameBoard, depth, playerSymbol);
+  
+  if(depth == 9 || gameStateValue != 'ongoing') {
+    pathWithScore.score = winValues[gameStateValue] / depth; 
+    pathWithScore.pathChosen = node;
+    return pathWithScore;  
   }
 
 
-  if(isMaximizer){
-    let value = -Infinity;
-    
-    for(let i = 0; i < 3; i++){
-      for(let j = 0; j < 3; j++){
-        if(newBoard[i][j] != ''){
-          newBoard[i][j] = 'o';
-          let boardValue = minmax(newBoard, depth + 1, false);
-          newBoard[i][j] = '';
-          value = Math.max(value, boardValue);
-        }
+  if(isMaximizer) {
+    let value = -Infinity;  
+    let selectedObject = pathWithScore;
+
+    for(let move of possibleMoves) {
+      let boardValue = miniMax(move, depth + 1, false);
+      if(value < boardValue.score) {
+        value = boardValue.score;
+        selectedObject.score = value;
+        selectedObject.pathChosen = move;
       }
     }
-    return value;
+    return selectedObject;
   }
   else{
     let value = Infinity;
-    
-    for(let i = 0; i < 3; i++){
-      for(let j = 0; j < 3; j++){
-        if(newBoard[i][j] != ''){
-          newBoard[i][j] = 'x';
-          let boardValue = minmax(newBoard, depth + 1, true);
-          newBoard[i][j] = '';
-          value = Math.min(value, boardValue);
-        }
+    let selectedObject = pathWithScore; 
+
+    for(let move of possibleMoves) {
+      let boardValue = miniMax(move, depth + 1, true);
+      if(value > boardValue.score) {
+        value = boardValue.score;
+        selectedObject.score = value;
+        selectedObject.pathChosen = move;
       }
-    }
-    return value;
+    } 
+
+    return selectedObject;
   }
 }
 
-function bestMove(){
-  let bestScore = -Infinity;
-  let move;
-
-  let newBoard = JSON.parse(JSON.stringify(gameBoard));
-
-  console.log('array:');
-  console.log(newBoard);
+function getPossibleMoves(array, playerSymbol) {
+  let movesArray = new Array();
 
   for(let i = 0; i < 3; i++){
     for(let j = 0; j < 3; j++){
-      if(newBoard[i][j] == ''){
-        newBoard[i][j] = 'o';
-        console.log('new board position: ' + i + ' ' + j);
-        console.log(newBoard);
-        let nodeValue = minmax(newBoard, turnCount + 1, false);
-        if(nodeValue > bestScore){
-          bestScore = nodeValue;
-          move = newBoard;
-        }
-        newBoard[i][j] = '';
-      }
-    }
-  }
-  console.log('best score is: ' + bestScore);
-  console.log('best Score array is: ');
-  console.log(move);
-  return move;
-}
-
-function getPossibleMoves(board, str){
-  let movesArray;
-  
-  for(let i = 0; i < 3; i++){
-    for(let j = 0; j < 3; j++){
+      let board = JSON.parse(JSON.stringify(array));
       if(board[i][j] == ''){
-        let tempBoard = {...board};
-        tempBoard[i][j] = str;
-        movesArray.push(tempBoard);
+        board[i][j] = playerSymbol;
+        movesArray.push(board);
       }
     }
   }
