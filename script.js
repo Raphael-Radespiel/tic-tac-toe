@@ -56,21 +56,26 @@ function setUpScore(scoreCondition){
   gameDisplay.append(getGameOptionButtons());
 }
 
+function clickSelector(e) {
+  gameMode = e.currentTarget.mode;
+  setUpGame();
+}
+
 function getSelectionMode() { 
   let divLeft = document.createElement('div');
   let divMiddle = document.createElement('div');
   let divRight = document.createElement('div');
   
   divLeft.innerHTML = 'Human<br>vs<br>Human';
+  divLeft.mode = 0;
   divMiddle.innerHTML = 'Human<br>vs<br>Smart<br>Computer';
+  divMiddle.mode = 1;
   divRight.innerHTML = 'Human<br>vs<br>not-so-smart<br>Computer';
+  divRight.mode = 2;
 
-  divLeft.addEventListener('click', () => 
-    {setUpGame();gameMode = 0;}, {once: true});
-  divMiddle.addEventListener('click', () => 
-    {setUpGame();gameMode = 1;}, {once: true});
-  divRight.addEventListener('click', () => 
-    {setUpGame();gameMode = 2;}, {once: true});
+  divLeft.addEventListener('click', clickSelector, {once: true});
+  divMiddle.addEventListener('click', clickSelector, {once: true});
+  divRight.addEventListener('click', clickSelector, {once: true});
 
   return [divLeft, divMiddle, divRight];
 }
@@ -185,23 +190,31 @@ function updateGame() {
       }
       break;
     case 1:
-      if(isPlayerOneTurn == true){
+      if(isPlayerOneTurn == true && turnCount != 9){
         isPlayerOneTurn = false;
         this.textContent = playerSymbol;
         this.style.color = 'blue';
         gameBoard[this.parentNode.id][this.id] = playerSymbol;
 
         let bestMove = miniMax(gameBoard, turnCount, true);
-        gameBoard = bestMove.pathChosen;
-        console.log(gameBoard);
+        let moveIndex = getIndexOfArrayDiference(gameBoard, bestMove.pathChosen); 
+        console.log(bestMove.pathChosen);
+        console.log(moveIndex[0] + ' ' + moveIndex[1]);
+        updateGameSquare(moveIndex[0], moveIndex[1]);
         isPlayerOneTurn = true; 
+      }
+      else{
+        isPlayerOneTurn = false;
+        this.textContent = playerSymbol;
+        this.style.color = 'blue';
+        gameBoard[this.parentNode.id][this.id] = playerSymbol;
       }
       break;
   }
 
   if(turnCount >= 5 && 
     checkGameState(gameBoard, turnCount, playerSymbol) != 'ongoing') { 
-    setUpScore(checkGameState(gameBoard, turnCount, playerSymbol));
+    setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, playerSymbol)), 500);
   }
 }
 
@@ -249,16 +262,15 @@ function miniMax(node, depth, isMaximizer){
 
   let possibleMoves = getPossibleMoves(gameBoard, playerSymbol);
 
-  playerSymbol = isMaximizer ? 'x' : 'o';
+  let previousPlayerSymbol = isMaximizer ? 'x' : 'o';
 
-  let gameStateValue = checkGameState(gameBoard, depth, playerSymbol);
+  let gameStateValue = checkGameState(gameBoard, depth, previousPlayerSymbol);
   
   if(depth == 9 || gameStateValue != 'ongoing') {
     pathWithScore.score = winValues[gameStateValue] / depth; 
     pathWithScore.pathChosen = node;
     return pathWithScore;  
   }
-
 
   if(isMaximizer) {
     let value = -Infinity;  
@@ -305,6 +317,25 @@ function getPossibleMoves(array, playerSymbol) {
   }
 
   return movesArray;
+}
+
+function getIndexOfArrayDiference(arrayOne, arrayTwo) {
+  for(let i = 0; i < 3; i++) {
+    for(let j = 0; j < 3; j++) {
+      if(arrayOne[i][j] != arrayTwo[i][j]){
+        return [i, j];
+      }
+    }
+  }
+}
+
+function updateGameSquare(row, col) {
+  let squareTarget = gameDisplay.querySelector(`.row#${CSS.escape(String(row))}`).querySelector(`#${CSS.escape(String(col))}`); 
+  squareTarget.textContent = 'o';
+  squareTarget.style.color = 'red';
+  squareTarget.removeEventListener('click', updateGame, {once: true});
+
+  gameBoard[row][col] = 'o';
 }
 
 setUpSelection();
