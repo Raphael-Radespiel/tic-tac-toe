@@ -4,6 +4,7 @@ const context = canvas.getContext('2d');
 
 let gameMode = 0;
 let isPlayerOneTurn = true;
+let nextPlayerTurn = 'o';
 let turnCount = 0;
 let gameBoard = [['','',''],['','',''],['','','']];
 let playerScores = [0,0];
@@ -245,30 +246,80 @@ function runGameLoop() {
     case 0:
     case 2:
       gameFunction = function() {
-        let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
-        canvas.onclick = e => {
+      
+        let isGameOver = false; 
+        let lastPlayerSymbol = isPlayerOneTurn ? 'o' : 'x';
 
+        canvas.onclick = e => {
+          let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
           let rect = e.target.getBoundingClientRect();
           let x = e.clientX - rect.left; 
           let y = e.clientY - rect.top;
           let clickSquare = checkEmptySquare(x, y, canvas.clientWidth);
 
           if(clickSquare.truth) {
-            playerSymbol = isPlayerOneTurn ? 'x' : 'o';
             renderSymbol(playerSymbol, clickSquare.index[1], clickSquare.index[0]);
             gameBoard[clickSquare.index[0]][clickSquare.index[1]] = playerSymbol;
             isPlayerOneTurn = !isPlayerOneTurn;
             turnCount += 1;
           }
+        }
 
-          if(turnCount >= 5 && 
-            checkGameState(gameBoard, turnCount, playerSymbol) != 'ongoing') { 
-            setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, playerSymbol)), 300);
-          }
+        if(turnCount >= 5 && 
+          checkGameState(gameBoard, turnCount, lastPlayerSymbol) != 'ongoing') { 
+          setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, lastPlayerSymbol)), 300);
+          isGameOver = true;
+          isPlayerOneTurn = !isPlayerOneTurn;
+        }
+
+        if(isGameOver == false) {
+          window.requestAnimationFrame(gameFunction);
         }
       };
       break;
     case 1:
+      gameFunction = function() {
+        let isGameOver = false;
+        let lastPlayerSymbol = isPlayerOneTurn ? 'o' : 'x';
+
+        if(turnCount >= 5 && 
+          checkGameState(gameBoard, turnCount, lastPlayerSymbol) != 'ongoing') { 
+          setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, lastPlayerSymbol)), 300);
+          isGameOver = true;
+          isPlayerOneTurn = !isPlayerOneTurn;
+          gameBoard = [['','',''], ['','',''], ['','','']];
+        }
+
+        if(isPlayerOneTurn && !isGameOver){
+          canvas.onclick = e => {  
+            let rect = e.target.getBoundingClientRect();
+            let x = e.clientX - rect.left; 
+            let y = e.clientY - rect.top;
+            let clickSquare = checkEmptySquare(x, y, canvas.clientWidth);
+
+            if(clickSquare.truth) {
+              renderSymbol('x', clickSquare.index[1], clickSquare.index[0]);
+              gameBoard[clickSquare.index[0]][clickSquare.index[1]] = 'x';
+              isPlayerOneTurn = false;
+              turnCount += 1;
+            }
+          }
+        }
+        else if(!isPlayerOneTurn && !isGameOver){ 
+          let bestMove = miniMax(gameBoard, turnCount, true);
+          let moveIndex = getIndexOfArrayDiference(gameBoard, bestMove.pathChosen); 
+          renderSymbol('o', moveIndex[1], moveIndex[0]);
+          gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
+          console.log(gameBoard);
+          console.log('Game score = ' + bestMove.score);
+          isPlayerOneTurn = true; 
+          turnCount += 1;
+        }
+
+        if(isGameOver == false){
+          window.requestAnimationFrame(gameFunction);
+        }
+      }
       break;
   }
 
