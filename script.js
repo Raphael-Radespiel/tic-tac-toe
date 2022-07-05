@@ -1,4 +1,6 @@
 const gameDisplay = document.querySelector('#display');
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d');
 
 let gameMode = 0;
 let isPlayerOneTurn = true;
@@ -32,7 +34,12 @@ function setUpGame() {
   gameDisplay.classList.add('flex-box-two');
   gameDisplay.classList.remove('flex-box-one');
 
-  gameDisplay.append(getGameModeText(), getCanvasGameBoard());
+  setCanvasGameBoard();
+
+  gameDisplay.append(getGameModeText(), canvas);
+
+  // GAME PLAY LOOP
+  runGameLoop();
 }
 
 function setUpScore(scoreCondition){ 
@@ -88,17 +95,17 @@ function getGameModeText() {
   return gameModeText;
 }
 
-function getCanvasGameBoard() { 
-  let canvas = document.createElement('canvas');
-  canvas.width = 900;
-  canvas.height = 900;
-  let context = canvas.getContext('2d');
+function setCanvasGameBoard() { 
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerWidth;
+
+  context.font = `${canvas.width / 3}px sans-serif`;
+  context.textAlign = 'center';
+
   context.fillRect(canvas.width / 3, 0, 10, canvas.height);
   context.fillRect(canvas.width / 3 * 2, 0, 10, canvas.height);
   context.fillRect(0, canvas.height / 3 , canvas.width, 10);
   context.fillRect(0, canvas.height / 3 * 2 , canvas.width, 10);
-
-  return canvas;
 }
 
 function getGameBoard() {
@@ -230,6 +237,69 @@ function updateGame() {
   }
 }
 
+function runGameLoop() {
+  // Make a function that varies if game mode is 0, 1, 2
+  let gameFunction;
+  
+  switch(gameMode) {
+    case 0:
+    case 2:
+      gameFunction = function() {
+        let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
+        canvas.onclick = e => {
+
+          let rect = e.target.getBoundingClientRect();
+          let x = e.clientX - rect.left; 
+          let y = e.clientY - rect.top;
+          let clickSquare = checkEmptySquare(x, y, canvas.clientWidth);
+
+          if(clickSquare.truth) {
+            playerSymbol = isPlayerOneTurn ? 'x' : 'o';
+            renderSymbol(playerSymbol, clickSquare.index[1], clickSquare.index[0]);
+            gameBoard[clickSquare.index[0]][clickSquare.index[1]] = playerSymbol;
+            isPlayerOneTurn = !isPlayerOneTurn;
+            turnCount += 1;
+          }
+
+          if(turnCount >= 5 && 
+            checkGameState(gameBoard, turnCount, playerSymbol) != 'ongoing') { 
+            setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, playerSymbol)), 300);
+          }
+        }
+      };
+      break;
+    case 1:
+      break;
+  }
+
+  window.requestAnimationFrame(gameFunction);
+}
+
+function renderSymbol(playerSymbol, x, y) {
+  context.fillStyle = playerSymbol == 'x' ? 'blue' : 'red';
+  context.fillText(playerSymbol, (x * (canvas.width / 3) + (canvas.width / 6)), (y * (canvas.width / 3) + (canvas.width / 3.75 )));
+}
+
+function checkEmptySquare(xPos, yPos, width) {
+  let snapValue = width / 3;
+  let col = Math.floor(xPos/snapValue);
+  let row = Math.floor(yPos/snapValue);
+
+  if(gameBoard[row][col] == '') {
+    let obj = {
+      truth: true,
+      index: [row, col]
+    }
+
+    return obj;
+  }
+
+  let obj = {
+    truth: false
+  }
+  return obj; 
+}
+
 function checkGameState(board, turn, playerValue){
   // Check horizontal/vertical win
   for(let i = 0; i < 3; i++){
@@ -349,5 +419,6 @@ function updateGameSquare(row, col) {
 
   gameBoard[row][col] = 'o';
 }
+
 
 setUpSelection();
