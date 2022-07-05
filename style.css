@@ -41,6 +41,16 @@ header h1{
   margin: 2rem;
 }
 
+#display{
+  text-align:center;
+}
+
+canvas{
+  height: 30rem;
+  width: 30rem;
+  margin: auto;
+}
+
 .board-game{
   width:30rem;
   height:30rem;
@@ -74,6 +84,11 @@ header h1{
 }
 
 @media screen and (max-width: 40rem){
+  canvas{
+    width: 99vw;
+    height: 99vw;
+  }
+
   .board-game{
     width: 99vw;
     height: 99vw;
@@ -87,6 +102,11 @@ header h1{
 }
 
 @media screen and (max-width: 60rem) and (orientation: landscape){
+  canvas{
+    height: 99vh;
+    width: 99vh;
+  }
+
   .board-game{
     height: 99vh;
     width: 99vh;

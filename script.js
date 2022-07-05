@@ -32,8 +32,7 @@ function setUpGame() {
   gameDisplay.classList.add('flex-box-two');
   gameDisplay.classList.remove('flex-box-one');
 
-
-  gameDisplay.append(getGameModeText(), getGameBoard());
+  gameDisplay.append(getGameModeText(), getCanvasGameBoard());
 }
 
 function setUpScore(scoreCondition){ 
@@ -87,6 +86,19 @@ function getGameModeText() {
   else gameModeText.textContent = 'Human vs not-so-smart Computer';
 
   return gameModeText;
+}
+
+function getCanvasGameBoard() { 
+  let canvas = document.createElement('canvas');
+  canvas.width = 900;
+  canvas.height = 900;
+  let context = canvas.getContext('2d');
+  context.fillRect(canvas.width / 3, 0, 10, canvas.height);
+  context.fillRect(canvas.width / 3 * 2, 0, 10, canvas.height);
+  context.fillRect(0, canvas.height / 3 , canvas.width, 10);
+  context.fillRect(0, canvas.height / 3 * 2 , canvas.width, 10);
+
+  return canvas;
 }
 
 function getGameBoard() {
