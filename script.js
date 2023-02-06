@@ -24,7 +24,8 @@ function setUpSelection() {
   gameBoard = [['','',''],['','',''],['','','']]; 
   turnCount = 0;
   
-  for(let i = 0; i < 3; i++) {
+  // FIX THIS??? TWO FUNCTION CALLS THIS IS BAD CODE
+  for(let i = 0; i < 2; i++) {
     gameDisplay.append(getSelectionMode()[i]);
   }
 }
@@ -70,28 +71,23 @@ function clickSelector(e) {
 
 function getSelectionMode() { 
   let divLeft = document.createElement('div');
-  let divMiddle = document.createElement('div');
   let divRight = document.createElement('div');
   
   divLeft.innerHTML = 'Human<br>vs<br>Human';
   divLeft.mode = 0;
-  divMiddle.innerHTML = 'Human<br>vs<br>Smart<br>Computer';
-  divMiddle.mode = 1;
-  divRight.innerHTML = 'Human<br>vs<br>not-so-smart<br>Computer';
-  divRight.mode = 2;
+  divRight.innerHTML = 'Human<br>vs<br>Computer';
+  divRight.mode = 1;
 
   divLeft.addEventListener('click', clickSelector, {once: true});
-  divMiddle.addEventListener('click', clickSelector, {once: true});
   divRight.addEventListener('click', clickSelector, {once: true});
 
-  return [divLeft, divMiddle, divRight];
+  return [divLeft, divRight];
 }
 
 function getGameModeText() {
   let gameModeText = document.createElement('div');
   if(gameMode == 0) gameModeText.textContent = 'Human vs Human';
-  else if(gameMode == 1) gameModeText.textContent = 'Human vs Smart Computer';
-  else gameModeText.textContent = 'Human vs not-so-smart Computer';
+  if(gameMode == 1) gameModeText.textContent = 'Human vs Computer';
 
   return gameModeText;
 }
@@ -107,40 +103,6 @@ function setCanvasGameBoard() {
   context.fillRect(canvas.width / 3 * 2, 0, 10, canvas.height);
   context.fillRect(0, canvas.height / 3 , canvas.width, 10);
   context.fillRect(0, canvas.height / 3 * 2 , canvas.width, 10);
-}
-
-function getGameBoard() {
-  let gameBoard = document.createElement('div');
-  gameBoard.classList.add('board-game');
-
-  for(let i = 0; i < 3; i++){  
-    let boardRow = document.createElement('div');
-    boardRow.classList.add('row');
-    boardRow.id = `${i}`;
-
-    for(let j = 0; j < 3; j++){
-      let boardColumn = document.createElement('div');
-      boardColumn.classList.add('col');
-      boardColumn.id = `${j}`;
-      boardRow.append(boardColumn);  
-      
-      boardColumn.style.borderBottom = '4px solid black'; 
-      boardColumn.style.borderTop = '4px solid black'; 
-      boardColumn.style.borderRight = '4px solid black';
-      boardColumn.style.borderLeft = '4px solid black';
-      
-      if(i == 0) boardColumn.style.borderTop = '';
-      else if(i == 2) boardColumn.style.borderBottom = '';
-
-      if(j == 0) boardColumn.style.borderLeft = '';
-      else if(j == 2) boardColumn.style.borderRight = '';
-
-      boardColumn.addEventListener('click', updateGame, {once: true});
-    }
-    gameBoard.append(boardRow);
-  }
-
-  return gameBoard;
 }
 
 function getGameScore(gameOutcome) {
