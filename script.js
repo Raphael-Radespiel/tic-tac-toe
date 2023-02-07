@@ -2,6 +2,16 @@ const gameDisplay = document.querySelector('#display');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
+let gameState = {
+  gameMode: 0,
+  // I'll change isPlayerOneTurn into something like: startingPlayer: 'x'
+  // isPlayerOneTurn: true,
+  startingPLayer: 'x',
+  nextPlayerTurn: 'o',
+  turnCount: 0,
+  gameBoard: [['','',''],['','',''],['','','']],
+  playerScores: [0,0]
+}
 let gameMode = 0;
 let isPlayerOneTurn = true;
 let nextPlayerTurn = 'o';
