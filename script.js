@@ -2,44 +2,39 @@ const gameDisplay = document.querySelector('#display');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-let gameState = {
-  gameMode: 0,
-  // I'll change isPlayerOneTurn into something like: startingPlayer: 'x'
-  // isPlayerOneTurn: true,
-  startingPLayer: 'x',
-  nextPlayerTurn: 'o',
-  turnCount: 0,
-  gameBoard: [['','',''],['','',''],['','','']],
-  playerScores: [0,0]
+let gameState = resetGameState();
+
+function resetGameState() {
+  return {
+    gameMode: 0,
+    // I'll change isPlayerOneTurn into something like: startingPlayer: 'x'
+    isPlayerOneTurn: true,
+    //startingPLayer: 'x',
+    nextPlayerTurn: 'o',
+    turnCount: 0,
+    gameBoard: [['','',''],['','',''],['','','']],
+    playerScores: [0,0]
+  }
 }
-let gameMode = 0;
-let isPlayerOneTurn = true;
-let nextPlayerTurn = 'o';
-let turnCount = 0;
-let gameBoard = [['','',''],['','',''],['','','']];
-let playerScores = [0,0];
 
 ////////////////////////////////////////////////
 // Functions that set up and return html divs //
 ////////////////////////////////////////////////
+
+// THIS FUNCTION IS OK
 function setUpSelection() {
   resetDisplay();
 
   gameDisplay.classList.add('flex-box-one'); 
   gameDisplay.classList.remove('flex-box-two');
 
-  // Reset the Game's variables
-  isPlayerOneTurn = true;
-  playerScores = [0,0];
-  gameBoard = [['','',''],['','',''],['','','']]; 
-  turnCount = 0;
+  gameState = resetGameState();
   
-  // FIX THIS??? TWO FUNCTION CALLS THIS IS BAD CODE
-  for(let i = 0; i < 2; i++) {
-    gameDisplay.append(getSelectionMode()[i]);
-  }
+  let [humanSelectDiv, computerSelectDiv] = getSelectionDivs();
+  gameDisplay.append(humanSelectDiv, computerSelectDiv);
 }
 
+// THIS IS OK, I'll HAVE TO SEE WHAT setcanvas runGameLoop and other internal functions do
 function setUpGame() { 
   resetDisplay();
 
@@ -54,32 +49,40 @@ function setUpGame() {
   runGameLoop();
 }
 
+// THIS FUNCTION's NAME IS SET UP SCORE, BUT IT DOES A WHOLE LOT MORE?
 function setUpScore(scoreCondition){ 
   resetDisplay();
 
-  gameBoard = [['','',''],['','',''],['','','']]; 
-  turnCount = 0;  
+  // Reset Board and turn Count
+  gameState.gameBoard = [['','',''],['','',''],['','','']]; 
+  gameState.turnCount = 0;  
 
+  // Switch starting player 
+  if(gameState.startingPLayer == 'x'){
+    gameState.startingPLayer = 'o';
+    gameState.gameState.nextPlayerTurn = 'x';
+  }
+  else if(gameState.startingPLayer == 'o'){
+    gameState.startingPLayer = 'x';
+    gameState.gameState.nextPlayerTurn = 'o';
+  }
+
+  // Count the score
   if(scoreCondition == 'x') {
-    playerScores[0]++;
+    gameState.playerScores[0]++;
   }
   else if(scoreCondition == 'o') {
-    playerScores[1]++;
+    gameState.playerScores[1]++;
   }
 
-  for(let i = 0; i < 2; i++) {
-    gameDisplay.append(getGameScore(scoreCondition)[i]);
-  }
+  let [winCondition, playerScore] = getGameScoreDivs(scoreCondition);
+  gameDisplay.append(winCondition, playerScore);
 
   gameDisplay.append(getGameOptionButtons());
 }
 
-function clickSelector(e) {
-  gameMode = e.currentTarget.mode;
-  setUpGame();
-}
-
-function getSelectionMode() { 
+// THIS IS OK
+function getSelectionDivs() { 
   let divLeft = document.createElement('div');
   let divRight = document.createElement('div');
   
@@ -87,6 +90,11 @@ function getSelectionMode() {
   divLeft.mode = 0;
   divRight.innerHTML = 'Human<br>vs<br>Computer';
   divRight.mode = 1;
+
+  function clickSelector(e) {
+    gameState.gameMode = e.currentTarget.mode;
+    setUpGame();
+  }
 
   divLeft.addEventListener('click', clickSelector, {once: true});
   divRight.addEventListener('click', clickSelector, {once: true});
@@ -96,8 +104,8 @@ function getSelectionMode() {
 
 function getGameModeText() {
   let gameModeText = document.createElement('div');
-  if(gameMode == 0) gameModeText.textContent = 'Human vs Human';
-  if(gameMode == 1) gameModeText.textContent = 'Human vs Computer';
+  if(gameState.gameMode == 0) gameModeText.textContent = 'Human vs Human';
+  if(gameState.gameMode == 1) gameModeText.textContent = 'Human vs Computer';
 
   return gameModeText;
 }
@@ -115,7 +123,7 @@ function setCanvasGameBoard() {
   context.fillRect(0, canvas.height / 3 * 2 , canvas.width, 10);
 }
 
-function getGameScore(gameOutcome) {
+function getGameScoreDivs(gameOutcome) {
   let winCondition = document.createElement('div'); 
   let playerScoreDiv = document.createElement('div'); 
 
@@ -129,8 +137,8 @@ function getGameScore(gameOutcome) {
     winCondition.id = `${gameOutcome}-win`;
   }
 
-  playerScoreDiv.innerHTML = `<strong style="color:blue;">${playerScores[0]}</strong>
-    <p> - </p><strong style="color:red;">${playerScores[1]}</strong>`;
+  playerScoreDiv.innerHTML = `<strong style="color:blue;">${gameState.playerScores[0]}</strong>
+    <p> - </p><strong style="color:red;">${gameState.playerScores[1]}</strong>`;
   playerScoreDiv.id = 'player-score';
 
   return [winCondition, playerScoreDiv];
@@ -145,7 +153,7 @@ function getGameOptionButtons() {
   resetButton.textContent = 'Reset';
   lowerPageButtons.id = 'lower-page-buttons';
 
-  newTurnButton.addEventListener('click', () => {setUpGame(gameMode)}, {once: true});
+  newTurnButton.addEventListener('click', () => {setUpGame(gameState.gameMode)}, {once: true});
   resetButton.addEventListener('click', setUpSelection, {once: true});
 
   lowerPageButtons.append(newTurnButton, resetButton);
@@ -161,52 +169,52 @@ function resetDisplay() {
 // Functions related to game mechanics and artificial inteligence //
 ////////////////////////////////////////////////////////////////////
 function updateGame() {
-  turnCount++;
+  gameState.turnCount++;
 
-  let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
+  let playerSymbol = gameState.isPlayerOneTurn ? 'x' : 'o';
 
-  switch(gameMode){
+  switch(gameState.gameMode){
     case 0:
       // Display the player symbol and update the Tic-Tac-Toe game array
-      if(isPlayerOneTurn == true){
-        isPlayerOneTurn = false;
+      if(gameState.isPlayerOneTurn == true){
+        gameState.isPlayerOneTurn = false;
         this.textContent = playerSymbol;
         this.style.color = 'blue';
-        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+        gameState.gameBoard[this.parentNode.id][this.id] = playerSymbol;
       }
       else{
-        isPlayerOneTurn = true;
+        gameState.isPlayerOneTurn = true;
         this.textContent = playerSymbol;
         this.style.color = 'red';
-        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+        gameState.gameBoard[this.parentNode.id][this.id] = playerSymbol;
       }
       break;
     case 1:
-      if(isPlayerOneTurn == true && turnCount != 9){
-        isPlayerOneTurn = false;
+      if(gameState.isPlayerOneTurn == true && gameState.turnCount != 9){
+        gameState.isPlayerOneTurn = false;
         this.textContent = playerSymbol;
         this.style.color = 'blue';
-        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+        gameState.gameBoard[this.parentNode.id][this.id] = playerSymbol;
 
-        let bestMove = miniMax(gameBoard, turnCount, true);
-        let moveIndex = getIndexOfArrayDiference(gameBoard, bestMove.pathChosen); 
+        let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
+        let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
         console.log(bestMove.pathChosen);
         console.log(moveIndex[0] + ' ' + moveIndex[1]);
         updateGameSquare(moveIndex[0], moveIndex[1]);
-        isPlayerOneTurn = true; 
+        gameState.isPlayerOneTurn = true; 
       }
       else{
-        isPlayerOneTurn = false;
+        gameState.isPlayerOneTurn = false;
         this.textContent = playerSymbol;
         this.style.color = 'blue';
-        gameBoard[this.parentNode.id][this.id] = playerSymbol;
+        gameState.gameBoard[this.parentNode.id][this.id] = playerSymbol;
       }
       break;
   }
 
-  if(turnCount >= 5 && 
-    checkGameState(gameBoard, turnCount, playerSymbol) != 'ongoing') { 
-    setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, playerSymbol)), 500);
+  if(gameState.turnCount >= 5 && 
+    checkGameState(gameState.gameBoard, gameState.turnCount, playerSymbol) != 'ongoing') { 
+    setTimeout(() => setUpScore(checkGameState(gameState.gameBoard, gameState.turnCount, playerSymbol)), 500);
   }
 }
 
@@ -214,16 +222,16 @@ function runGameLoop() {
   // Make a function that varies if game mode is 0, 1, 2
   let gameFunction;
   
-  switch(gameMode) {
+  switch(gameState.gameMode) {
     case 0:
     case 2:
       gameFunction = function() {
       
         let isGameOver = false; 
-        let lastPlayerSymbol = isPlayerOneTurn ? 'o' : 'x';
+        let lastPlayerSymbol = gameState.isPlayerOneTurn ? 'o' : 'x';
 
         canvas.onclick = e => {
-          let playerSymbol = isPlayerOneTurn ? 'x' : 'o';
+          let playerSymbol = gameState.isPlayerOneTurn ? 'x' : 'o';
           let rect = e.target.getBoundingClientRect();
           let x = e.clientX - rect.left; 
           let y = e.clientY - rect.top;
@@ -231,17 +239,17 @@ function runGameLoop() {
 
           if(clickSquare.truth) {
             renderSymbol(playerSymbol, clickSquare.index[1], clickSquare.index[0]);
-            gameBoard[clickSquare.index[0]][clickSquare.index[1]] = playerSymbol;
-            isPlayerOneTurn = !isPlayerOneTurn;
-            turnCount += 1;
+            gameState.gameBoard[clickSquare.index[0]][clickSquare.index[1]] = playerSymbol;
+            gameState.isPlayerOneTurn = !gameState.isPlayerOneTurn;
+            gameState.turnCount += 1;
           }
         }
 
-        if(turnCount >= 5 && 
-          checkGameState(gameBoard, turnCount, lastPlayerSymbol) != 'ongoing') { 
-          setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, lastPlayerSymbol)), 300);
+        if(gameState.turnCount >= 5 && 
+          checkGameState(gameState.gameBoard, gameState.turnCount, lastPlayerSymbol) != 'ongoing') { 
+          setTimeout(() => setUpScore(checkGameState(gameState.gameBoard, gameState.turnCount, lastPlayerSymbol)), 300);
           isGameOver = true;
-          isPlayerOneTurn = !isPlayerOneTurn;
+          gameState.isPlayerOneTurn = !gameState.isPlayerOneTurn;
         }
 
         if(isGameOver == false) {
@@ -252,17 +260,17 @@ function runGameLoop() {
     case 1:
       gameFunction = function() {
         let isGameOver = false;
-        let lastPlayerSymbol = isPlayerOneTurn ? 'o' : 'x';
+        let lastPlayerSymbol = gameState.isPlayerOneTurn ? 'o' : 'x';
 
-        if(turnCount >= 5 && 
-          checkGameState(gameBoard, turnCount, lastPlayerSymbol) != 'ongoing') { 
-          setTimeout(() => setUpScore(checkGameState(gameBoard, turnCount, lastPlayerSymbol)), 300);
+        if(gameState.turnCount >= 5 && 
+          checkGameState(gameState.gameBoard, gameState.turnCount, lastPlayerSymbol) != 'ongoing') { 
+          setTimeout(() => setUpScore(checkGameState(gameState.gameBoard, gameState.turnCount, lastPlayerSymbol)), 300);
           isGameOver = true;
-          isPlayerOneTurn = !isPlayerOneTurn;
-          gameBoard = [['','',''], ['','',''], ['','','']];
+          gameState.isPlayerOneTurn = !gameState.isPlayerOneTurn;
+          gameState.gameBoard = [['','',''], ['','',''], ['','','']];
         }
 
-        if(isPlayerOneTurn && !isGameOver){
+        if(gameState.isPlayerOneTurn && !isGameOver){
           canvas.onclick = e => {  
             let rect = e.target.getBoundingClientRect();
             let x = e.clientX - rect.left; 
@@ -271,21 +279,21 @@ function runGameLoop() {
 
             if(clickSquare.truth) {
               renderSymbol('x', clickSquare.index[1], clickSquare.index[0]);
-              gameBoard[clickSquare.index[0]][clickSquare.index[1]] = 'x';
-              isPlayerOneTurn = false;
-              turnCount += 1;
+              gameState.gameBoard[clickSquare.index[0]][clickSquare.index[1]] = 'x';
+              gameState.isPlayerOneTurn = false;
+              gameState.turnCount += 1;
             }
           }
         }
-        else if(!isPlayerOneTurn && !isGameOver){ 
-          let bestMove = miniMax(gameBoard, turnCount, true);
-          let moveIndex = getIndexOfArrayDiference(gameBoard, bestMove.pathChosen); 
+        else if(!gameState.isPlayerOneTurn && !isGameOver){ 
+          let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
+          let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
           renderSymbol('o', moveIndex[1], moveIndex[0]);
-          gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
-          console.log(gameBoard);
+          gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
+          console.log(gameState.gameBoard);
           console.log('Game score = ' + bestMove.score);
-          isPlayerOneTurn = true; 
-          turnCount += 1;
+          gameState.isPlayerOneTurn = true; 
+          gameState.turnCount += 1;
         }
 
         if(isGameOver == false){
@@ -308,7 +316,7 @@ function checkEmptySquare(xPos, yPos, width) {
   let col = Math.floor(xPos/snapValue);
   let row = Math.floor(yPos/snapValue);
 
-  if(gameBoard[row][col] == '') {
+  if(gameState.gameBoard[row][col] == '') {
     let obj = {
       truth: true,
       index: [row, col]
@@ -440,7 +448,7 @@ function updateGameSquare(row, col) {
   squareTarget.style.color = 'red';
   squareTarget.removeEventListener('click', updateGame, {once: true});
 
-  gameBoard[row][col] = 'o';
+  gameState.gameBoard[row][col] = 'o';
 }
 
 
