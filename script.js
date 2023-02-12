@@ -1,4 +1,4 @@
-const gameDisplay = document.querySelector('#display');
+const main = document.querySelector("main");
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
@@ -21,29 +21,38 @@ function resetGameState() {
 // Functions that set up and return html divs //
 ////////////////////////////////////////////////
 
-// THIS FUNCTION IS OK
+// This is approved
 function setUpSelection() {
-  resetDisplay();
-
-  gameDisplay.classList.add('flex-box-one'); 
-  gameDisplay.classList.remove('flex-box-two');
-
   gameState = resetGameState();
-  
-  let [humanSelectDiv, computerSelectDiv] = getSelectionDivs();
-  gameDisplay.append(humanSelectDiv, computerSelectDiv);
+
+  main.innerHTML = `
+  <section class="flex-box-one">
+    <div data-mode="0">
+      Human<br>vs<br>Human
+    </div>
+    <div data-mode="1">
+      Human<br>vs<br>Computer
+    </div>
+    </section>
+  `;
+
+  main.querySelector("div[data-mode='0']").addEventListener('click', () => {gameState.gameMode = 0; setUpGame();}, {once: true});
+  main.querySelector("div[data-mode='1']").addEventListener('click', () => {gameState.gameMode = 1; setUpGame();}, {once: true});
 }
 
 // THIS IS OK, I'll HAVE TO SEE WHAT setcanvas runGameLoop and other internal functions do
 function setUpGame() { 
-  resetDisplay();
-
-  gameDisplay.classList.add('flex-box-two');
-  gameDisplay.classList.remove('flex-box-one');
+  main.innerHTML = `
+  <section class="flex-box-two">
+    <div>
+    ${(gameState.gameMode == 0) ? 'Human vs Human' : 'Human vs Computer'}
+    </div>
+  </section>
+  `;
 
   setCanvasGameBoard();
 
-  gameDisplay.append(getGameModeText(), canvas);
+  main.querySelector("section").append(canvas);
 
   // GAME PLAY LOOP
   runGameLoop();
@@ -51,12 +60,30 @@ function setUpGame() {
 
 // THIS FUNCTION's NAME IS SET UP SCORE, BUT IT DOES A WHOLE LOT MORE?
 function setUpScore(scoreCondition){ 
-  resetDisplay();
+  main.innerHTML = `
+  <section class="flex-box-two">
+    <div class="win-display" id="${scoreCondition + "-win"}">
+      ${(scoreCondition == 'tie') ? "it's a tie!" : scoreCondition + " won!"}
+    </div>
+    <div id="player-score">
+      <strong style="color:blue;">${gameState.playerScores[0]}</strong>
+      <p> - </p>
+      <strong style="color:red;">${gameState.playerScores[1]}</strong>
+    </div>
+    <div id="lower-page-buttons">
+      <div id="new-turn">New Turn</div>
+      <div id="reset">Reset</div>
+    </div>
+  </section>`;
+
+  main.querySelector("#new-turn").addEventListener('click', () => {setUpGame(gameState.gameMode)}, {once: true});
+  main.querySelector("#reset").addEventListener('click', setUpSelection, {once: true});
 
   // Reset Board and turn Count
   gameState.gameBoard = [['','',''],['','',''],['','','']]; 
   gameState.turnCount = 0;  
 
+  // I CAN PROBABLY MAKE THIS LOGIC PRETTIER BUT IT WORKS FOR NOW
   // Switch starting player 
   if(gameState.startingPLayer == 'x'){
     gameState.startingPLayer = 'o';
@@ -74,42 +101,9 @@ function setUpScore(scoreCondition){
   else if(scoreCondition == 'o') {
     gameState.playerScores[1]++;
   }
-
-  let [winCondition, playerScore] = getGameScoreDivs(scoreCondition);
-  gameDisplay.append(winCondition, playerScore);
-
-  gameDisplay.append(getGameOptionButtons());
 }
 
-// THIS IS OK
-function getSelectionDivs() { 
-  let divLeft = document.createElement('div');
-  let divRight = document.createElement('div');
-  
-  divLeft.innerHTML = 'Human<br>vs<br>Human';
-  divLeft.mode = 0;
-  divRight.innerHTML = 'Human<br>vs<br>Computer';
-  divRight.mode = 1;
-
-  function clickSelector(e) {
-    gameState.gameMode = e.currentTarget.mode;
-    setUpGame();
-  }
-
-  divLeft.addEventListener('click', clickSelector, {once: true});
-  divRight.addEventListener('click', clickSelector, {once: true});
-
-  return [divLeft, divRight];
-}
-
-function getGameModeText() {
-  let gameModeText = document.createElement('div');
-  if(gameState.gameMode == 0) gameModeText.textContent = 'Human vs Human';
-  if(gameState.gameMode == 1) gameModeText.textContent = 'Human vs Computer';
-
-  return gameModeText;
-}
-
+// THIS IS APPROVED
 function setCanvasGameBoard() { 
   canvas.width = window.innerWidth;
   canvas.height = window.innerWidth;
@@ -121,48 +115,6 @@ function setCanvasGameBoard() {
   context.fillRect(canvas.width / 3 * 2, 0, 10, canvas.height);
   context.fillRect(0, canvas.height / 3 , canvas.width, 10);
   context.fillRect(0, canvas.height / 3 * 2 , canvas.width, 10);
-}
-
-function getGameScoreDivs(gameOutcome) {
-  let winCondition = document.createElement('div'); 
-  let playerScoreDiv = document.createElement('div'); 
-
-  winCondition.classList.add('win-display');
-  if(gameOutcome == 'tie'){
-    winCondition.textContent = 'its a tie!';
-    winCondition.id = 'tie';
-  }
-  else{
-    winCondition.textContent = `${gameOutcome} won!`;
-    winCondition.id = `${gameOutcome}-win`;
-  }
-
-  playerScoreDiv.innerHTML = `<strong style="color:blue;">${gameState.playerScores[0]}</strong>
-    <p> - </p><strong style="color:red;">${gameState.playerScores[1]}</strong>`;
-  playerScoreDiv.id = 'player-score';
-
-  return [winCondition, playerScoreDiv];
-}
-
-function getGameOptionButtons() {
-  let resetButton = document.createElement('div');
-  let newTurnButton = document.createElement('div');
-  let lowerPageButtons = document.createElement('div');
-  
-  newTurnButton.textContent = 'New Turn';
-  resetButton.textContent = 'Reset';
-  lowerPageButtons.id = 'lower-page-buttons';
-
-  newTurnButton.addEventListener('click', () => {setUpGame(gameState.gameMode)}, {once: true});
-  resetButton.addEventListener('click', setUpSelection, {once: true});
-
-  lowerPageButtons.append(newTurnButton, resetButton);
-
-  return lowerPageButtons;
-}
-
-function resetDisplay() {
-  gameDisplay.innerHTML = '';
 }
  
 ////////////////////////////////////////////////////////////////////

@@ -9,3 +9,5 @@ SetUpSelection() -> Resets the display, changes the display class so it has appr
 SetUpGame() -> Resets the display, changes the display class so it has appropriate style, 
                 sets canvas, appends it and runs gameplay loop
 ResetDisplay() -> Makes it so The game display section has nothing inside of it
+
+TODO: checkout github psge canvas style to see why its not centered with my new code refactoring
