@@ -38,6 +38,7 @@ function setUpSelection() {
   main.querySelector("div[data-mode='1']").addEventListener('click', () => {gameState.gameMode = 1; setUpGame();}, {once: true});
 }
 
+//TODO: CHANGE RUNGAMELOOP TO JUST CHECK THE GAME MODE AND CHOOSE A SPECIFIC FUNCTION
 function setUpGame() { 
   main.innerHTML = `
   <section class="flex-box-two">
@@ -51,8 +52,7 @@ function setUpGame() {
 
   main.querySelector("section").append(canvas);
 
-  // GAME PLAY LOOP
-  runGameLoop();
+  (gameState.gameMode == 0) ? runHumanVsHumanGameLoop() : runHumanVsComputerGameLoop();
 }
 
 function setUpScore(scoreCondition){ 
@@ -92,67 +92,55 @@ function setCanvasGameBoard() {
 ////////////////////////////////////////////////////////////////////
 // Functions related to game mechanics and artificial inteligence //
 ////////////////////////////////////////////////////////////////////
-
-function runGameLoop() {
+function runHumanVsHumanGameLoop(){
   let gameFunction;
-  
-  switch(gameState.gameMode) {
-    case 0:
-      gameFunction = function() {
+    canvas.onclick = e => {
+      handleClickInput(e);
+    }
 
-        canvas.onclick = e => {
-          handleClickInput(e);
-        }
+    let boardResult = checkGameState();
 
-        let boardResult = checkGameState();
+    if(gameState.turnCount >= 5 && 
+      boardResult != 'ongoing') { 
+      handleMatchEnd(boardResult);
+    }
+    else{
+      window.requestAnimationFrame(runHumanVsHumanGameLoop);
+    }
 
-        if(gameState.turnCount >= 5 && 
-          boardResult != 'ongoing') { 
-          handleMatchEnd(boardResult);
-        }
-        else{
-          window.requestAnimationFrame(gameFunction);
-        }
+}
 
-      };
-      break;
-    case 1:
-      // OK, so basinc stuff
-      // Check if the game is over
-      // then check if its the human or the computer that's playing
-      // if its the human do the regular human thing
-      gameFunction = function() {
+function runHumanVsComputerGameLoop(){
 
-        let boardResult = checkGameState();
-        if(gameState.turnCount >= 5 && 
-          boardResult != 'ongoing') { 
-          handleMatchEnd(boardResult);
-        }
-
-        if(gameState.currentPlayerTurn == 'x' && !isGameOver){
-          canvas.onclick = e => {  
-            handleClickInput(e);
-          }
-        }
-        else if(!gameState.isPlayerOneTurn && !isGameOver){ 
-          let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
-          let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
-          renderSymbol('o', moveIndex[1], moveIndex[0]);
-          gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
-          console.log(gameState.gameBoard);
-          console.log('Game score = ' + bestMove.score);
-          gameState.isPlayerOneTurn = true; 
-          gameState.turnCount += 1;
-        }
-
-        if(isGameOver == false){
-          window.requestAnimationFrame(gameFunction);
-        }
-      }
-      break;
+  let boardResult = checkGameState();
+  if(gameState.turnCount >= 5 && 
+    boardResult != 'ongoing') { 
+    handleMatchEnd(boardResult);
   }
 
-  window.requestAnimationFrame(gameFunction);
+  // I THINK IM GOING ABOUT THIS THE WRONG WAY. 
+  // MAYBE ITS ADDING THIS EVERY SINGLE FRAME AND THATS A PROBLEM
+  // OR THE PLAYER TURN FILTER ISNT GOOD BECAUSE THE ONCLICK HANDLER
+  // GETS ADDED AND IS STILL USED EVEN AFTER A CLICK
+  if(gameState.currentPlayerTurn == 'x' && !isGameOver){
+    canvas.onclick = e => {  
+      handleClickInput(e);
+    }
+  }
+  else if(!gameState.isPlayerOneTurn && !isGameOver){ 
+    let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
+    let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
+    renderSymbol('o', moveIndex[1], moveIndex[0]);
+    gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
+    console.log(gameState.gameBoard);
+    console.log('Game score = ' + bestMove.score);
+    gameState.isPlayerOneTurn = true; 
+    gameState.turnCount += 1;
+  }
+
+  if(isGameOver == false){
+    window.requestAnimationFrame(runHumanVsComputerGameLoop);
+  }
 }
 
 /////////////////////////////////////////
