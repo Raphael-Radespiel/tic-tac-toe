@@ -11,6 +11,7 @@ function resetGameState() {
     currentPlayerTurn: 'x',
     nextPlayerTurn: 'o',
     turnCount: 0,
+    matchState: 'ongoing',
     gameBoard: [['','',''],['','',''],['','','']],
     playerScores: [0,0]
   }
@@ -93,21 +94,17 @@ function setCanvasGameBoard() {
 // Functions related to game mechanics and artificial inteligence //
 ////////////////////////////////////////////////////////////////////
 function runHumanVsHumanGameLoop(){
-  let gameFunction;
-    canvas.onclick = e => {
-      handleClickInput(e);
-    }
+  canvas.onclick = e => {
+    
+    handleClickInput(e);
 
-    let boardResult = checkGameState();
+    gameState.matchState = checkGameState();
 
     if(gameState.turnCount >= 5 && 
-      boardResult != 'ongoing') { 
-      handleMatchEnd(boardResult);
+      gameState.matchState != 'ongoing') { 
+      handleMatchEnd(gameState.matchState);
     }
-    else{
-      window.requestAnimationFrame(runHumanVsHumanGameLoop);
-    }
-
+  }
 }
 
 function runHumanVsComputerGameLoop(){
