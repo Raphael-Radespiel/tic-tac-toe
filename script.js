@@ -7,7 +7,7 @@ let gameState = resetGameState();
 function resetGameState() {
   return {
     gameMode: 0,
-    startingPLayer: 'x',
+    startingPlayer: 'x',
     currentPlayerTurn: 'x',
     nextPlayerTurn: 'o',
     turnCount: 0,
@@ -39,7 +39,6 @@ function setUpSelection() {
   main.querySelector("div[data-mode='1']").addEventListener('click', () => {gameState.gameMode = 1; setUpGame();}, {once: true});
 }
 
-//TODO: CHANGE RUNGAMELOOP TO JUST CHECK THE GAME MODE AND CHOOSE A SPECIFIC FUNCTION
 function setUpGame() { 
   main.innerHTML = `
   <section class="flex-box-two">
@@ -96,48 +95,65 @@ function setCanvasGameBoard() {
 function runHumanVsHumanGameLoop(){
   canvas.onclick = e => {
     
-    handleClickInput(e);
+    const isClickSuccessful = handleClickInput(e);
 
-    gameState.matchState = checkGameState();
+    if(isClickSuccessful){
+      gameState.matchState = checkGameState();
 
-    if(gameState.turnCount >= 5 && 
-      gameState.matchState != 'ongoing') { 
-      handleMatchEnd(gameState.matchState);
+      if(gameState.turnCount >= 5 && 
+        gameState.matchState != 'ongoing') { 
+        handleMatchEnd(gameState.matchState);
+      }
     }
   }
 }
 
 function runHumanVsComputerGameLoop(){
 
-  let boardResult = checkGameState();
-  if(gameState.turnCount >= 5 && 
-    boardResult != 'ongoing') { 
-    handleMatchEnd(boardResult);
+  if(gameState.startingPlayer == 'o'){
+    makeComputerMove();
   }
 
-  // I THINK IM GOING ABOUT THIS THE WRONG WAY. 
-  // MAYBE ITS ADDING THIS EVERY SINGLE FRAME AND THATS A PROBLEM
-  // OR THE PLAYER TURN FILTER ISNT GOOD BECAUSE THE ONCLICK HANDLER
-  // GETS ADDED AND IS STILL USED EVEN AFTER A CLICK
-  if(gameState.currentPlayerTurn == 'x' && !isGameOver){
-    canvas.onclick = e => {  
-      handleClickInput(e);
+  canvas.onclick = e => {
+    const isClickSuccessful = handleClickInput(e);
+
+    if(isClickSuccessful){
+      gameState.matchState = checkGameState();
+
+      if(gameState.turnCount >= 5 && 
+        gameState.matchState != 'ongoing') { 
+        handleMatchEnd(gameState.matchState);
+        return;
+      }
+
+      makeComputerMove();
+
+      gameState.matchState = checkGameState();
+
+      if(gameState.turnCount >= 5 && 
+        gameState.matchState != 'ongoing') { 
+        handleMatchEnd(gameState.matchState);
+        return;
+      }
     }
   }
-  else if(!gameState.isPlayerOneTurn && !isGameOver){ 
-    let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
-    let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
-    renderSymbol('o', moveIndex[1], moveIndex[0]);
-    gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
-    console.log(gameState.gameBoard);
-    console.log('Game score = ' + bestMove.score);
-    gameState.isPlayerOneTurn = true; 
-    gameState.turnCount += 1;
-  }
+}
 
-  if(isGameOver == false){
-    window.requestAnimationFrame(runHumanVsComputerGameLoop);
-  }
+function makeComputerMove(){
+  // Calculate best move
+  let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
+  let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
+
+  // Apply move to the board 
+  renderSymbol('o', moveIndex[1], moveIndex[0]);
+  gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
+
+  swapPlayerTurn();
+  gameState.turnCount++;
+  
+  // Debug stuff
+  console.log(gameState.gameBoard);
+  console.log('Game score = ' + bestMove.score);
 }
 
 /////////////////////////////////////////
@@ -156,10 +172,12 @@ function handleClickInput(e){
   if(clickSquare.truth) {
     renderSymbol(gameState.currentPlayerTurn, clickSquare.index[1], clickSquare.index[0]);
     gameState.gameBoard[clickSquare.index[0]][clickSquare.index[1]] = gameState.currentPlayerTurn;
-    // write a switch player turn
+
     swapPlayerTurn();
     gameState.turnCount++;
   }
+
+  return clickSquare.truth;
 }
 
 function handleMatchEnd(boardResult){
@@ -167,10 +185,12 @@ function handleMatchEnd(boardResult){
   gameState.gameBoard = [['','',''],['','',''],['','','']]; 
   gameState.turnCount = 0;  
 
+  gameState.matchState = 'ongoing';
+
   // Swap starting Player
-  gameState.startingPLayer == 'x' ? 
-    gameState.startingPLayer = 'o' : 
-    gameState.startingPLayer = 'x';
+  gameState.startingPlayer == 'x' ? 
+    gameState.startingPlayer = 'o' : 
+    gameState.startingPlayer = 'x';
   
   // Count Score
   if(boardResult == 'x') gameState.playerScores[0]++;
@@ -204,11 +224,7 @@ function checkEmptySquare(xPos, yPos, width) {
   return obj; 
 }
 
-function checkGameState(){
-  const board = gameState.gameBoard;
-  const turn = gameState.turnCount;
-  const playerValue = gameState.nextPlayerTurn;
-
+function checkGameState(board = gameState.gameBoard, turn = gameState.turnCount, playerValue = gameState.nextPlayerTurn){
   // Check horizontal/vertical win
   for(let i = 0; i < 3; i++){
     if(board[i][0] == board[i][1] && board[i][1] == board[i][2] && 
@@ -234,6 +250,7 @@ function checkGameState(){
   return finalValue;
 }
 
+// MINIMAX FUNCTION
 function miniMax(node, depth, isMaximizer){
   let winValues = {
     x: -1,
