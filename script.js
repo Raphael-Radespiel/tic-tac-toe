@@ -13,7 +13,8 @@ function resetGameState() {
     turnCount: 0,
     matchState: 'ongoing',
     gameBoard: [['','',''],['','',''],['','','']],
-    playerScores: [0,0]
+    playerScores: [0,0],
+    clickFlag: true 
   }
 }
 
@@ -94,6 +95,9 @@ function setCanvasGameBoard() {
 ////////////////////////////////////////////////////////////////////
 function runHumanVsHumanGameLoop(){
   canvas.onclick = e => {
+    if(gameState.clickFlag == false) return;
+
+    gameState.clickFlag = false;
     
     const isClickSuccessful = handleClickInput(e);
 
@@ -105,16 +109,25 @@ function runHumanVsHumanGameLoop(){
         handleMatchEnd(gameState.matchState);
       }
     }
+
+    gameState.clickFlag = true;
   }
 }
 
 function runHumanVsComputerGameLoop(){
-
   if(gameState.startingPlayer == 'o'){
-    makeComputerMove();
+    renderSymbol('o', 0, 0);
+    gameState.gameBoard[0][0] = 'o';
+
+    swapPlayerTurn();
+    gameState.turnCount++;
   }
 
   canvas.onclick = e => {
+    if(gameState.clickFlag == false) return;
+
+    gameState.clickFlag = false;
+
     const isClickSuccessful = handleClickInput(e);
 
     if(isClickSuccessful){
@@ -123,6 +136,7 @@ function runHumanVsComputerGameLoop(){
       if(gameState.turnCount >= 5 && 
         gameState.matchState != 'ongoing') { 
         handleMatchEnd(gameState.matchState);
+        gameState.clickFlag = true;
         return;
       }
 
@@ -133,27 +147,52 @@ function runHumanVsComputerGameLoop(){
       if(gameState.turnCount >= 5 && 
         gameState.matchState != 'ongoing') { 
         handleMatchEnd(gameState.matchState);
+        gameState.clickFlag = true;
         return;
       }
     }
+    
+    gameState.clickFlag = true;
   }
 }
 
 function makeComputerMove(){
   // Calculate best move
-  let bestMove = miniMax(gameState.gameBoard, gameState.turnCount, true);
-  let moveIndex = getIndexOfArrayDiference(gameState.gameBoard, bestMove.pathChosen); 
+  let copyOfGameBoard = JSON.parse(JSON.stringify(gameState.gameBoard));
+  let bestMove = getBestMove(copyOfGameBoard, gameState.turnCount++); 
 
   // Apply move to the board 
-  renderSymbol('o', moveIndex[1], moveIndex[0]);
-  gameState.gameBoard[moveIndex[0]][moveIndex[1]] = 'o';
+  renderSymbol('o', bestMove[1], bestMove[0]);
+  gameState.gameBoard[bestMove[0]][bestMove[1]] = 'o';
 
   swapPlayerTurn();
   gameState.turnCount++;
-  
-  // Debug stuff
-  console.log(gameState.gameBoard);
-  console.log('Game score = ' + bestMove.score);
+}
+
+function getBestMove(node, depth){
+
+    let bestValue = -Infinity;  
+    let bestMove = [];
+
+    for(let i = 0; i < 3; i++) {
+      for(let j = 0; j < 3; j++){
+
+        if(node[i][j] == ""){
+
+          let copyOfNode = JSON.parse(JSON.stringify(node));
+          copyOfNode[i][j] = "o";
+
+          let score = miniMax(copyOfNode, depth + 1, false);
+
+          if(bestValue < score){
+            bestValue = score;
+            bestMove = [i, j];
+          }
+        }
+      }
+    }
+
+  return bestMove;
 }
 
 /////////////////////////////////////////
@@ -191,6 +230,12 @@ function handleMatchEnd(boardResult){
   gameState.startingPlayer == 'x' ? 
     gameState.startingPlayer = 'o' : 
     gameState.startingPlayer = 'x';
+
+  gameState.currentPlayerTurn = gameState.startingPlayer;
+
+  gameState.startingPlayer == 'o' ?
+    gameState.nextPlayerTurn = 'x' : 
+    gameState.nextPlayerTurn = 'o';
   
   // Count Score
   if(boardResult == 'x') gameState.playerScores[0]++;
@@ -210,18 +255,15 @@ function checkEmptySquare(xPos, yPos, width) {
   let row = Math.floor(yPos/snapValue);
 
   if(gameState.gameBoard[row][col] == '') {
-    let obj = {
+    return {
       truth: true,
       index: [row, col]
     }
-
-    return obj;
   }
 
-  let obj = {
+  return {
     truth: false
   }
-  return obj; 
 }
 
 function checkGameState(board = gameState.gameBoard, turn = gameState.turnCount, playerValue = gameState.nextPlayerTurn){
@@ -250,91 +292,98 @@ function checkGameState(board = gameState.gameBoard, turn = gameState.turnCount,
   return finalValue;
 }
 
-// MINIMAX FUNCTION
 function miniMax(node, depth, isMaximizer){
-  let winValues = {
-    x: -1,
-    o: 1,
-    tie: 0
-  };
-  
-  let pathWithScore = {
-    pathChosen: [],
-    score: 0
-  };
 
-  let gameBoard = JSON.parse(JSON.stringify(node));
-  
-  let playerSymbol = isMaximizer ? 'o' : 'x';
+  if(depth >= 5){
+    let previousPlayerSymbol = isMaximizer ? 'x' : 'o';
 
-  let possibleMoves = getPossibleMoves(gameBoard, playerSymbol);
+    let gameStateValue = checkGameState(node, depth, previousPlayerSymbol);
+    
+    if(gameStateValue != 'ongoing') {
+      let multiplier;
+      gameStateValue == 'x' ? multiplier = -1 : gameStateValue == 'o' ? multiplier = 1 : multiplier = 0;
 
-  let previousPlayerSymbol = isMaximizer ? 'x' : 'o';
-
-  let gameStateValue = checkGameState(gameBoard, depth, previousPlayerSymbol);
-  
-  if(depth == 9 || gameStateValue != 'ongoing') {
-    pathWithScore.score = winValues[gameStateValue] / depth; 
-    pathWithScore.pathChosen = node;
-    return pathWithScore;  
+      let score = multiplier / depth;
+      return score;  
+    }
   }
 
   if(isMaximizer) {
-    let value = -Infinity;  
-    let selectedObject = pathWithScore;
+    let bestValue = -Infinity;  
 
-    for(let move of possibleMoves) {
-      let boardValue = miniMax(move, depth + 1, false);
-      if(value < boardValue.score) {
-        value = boardValue.score;
-        selectedObject.score = value;
-        selectedObject.pathChosen = move;
+    for(let i = 0; i < 3; i++) {
+      for(let j = 0; j < 3; j++){
+
+        if(node[i][j] == ""){
+          let copyOfNode = JSON.parse(JSON.stringify(node));
+          copyOfNode[i][j] = "o";
+
+          let score = miniMax(copyOfNode, depth + 1, false);
+
+          if(bestValue < score){
+            bestValue = score;
+          }
+        }
       }
     }
-    return selectedObject;
+
+    return bestValue; 
   }
   else{
-    let value = Infinity;
-    let selectedObject = pathWithScore; 
+    let bestValue = Infinity;  
 
-    for(let move of possibleMoves) {
-      let boardValue = miniMax(move, depth + 1, true);
-      if(value > boardValue.score) {
-        value = boardValue.score;
-        selectedObject.score = value;
-        selectedObject.pathChosen = move;
+    for(let i = 0; i < 3; i++) {
+      for(let j = 0; j < 3; j++){
+
+        if(node[i][j] == ""){
+          let copyOfNode = JSON.parse(JSON.stringify(node));
+          copyOfNode[i][j] = "x";
+
+          let score = miniMax(copyOfNode, depth + 1, true);
+
+          if(bestValue > score){
+            bestValue = score;
+          }
+        }
       }
-    } 
+    }
 
-    return selectedObject;
+    return bestValue; 
   }
 }
 
-function getPossibleMoves(array, playerSymbol) {
+function cloneAndModifyBoard(board, coord, player){
+  let copyOfGameBoard = JSON.parse(JSON.stringify(board));
+  copyOfGameBoard[coord[0]][coord[1]] = player;
+
+  return copyOfGameBoard;
+}
+
+function cloneAndModifyPossibleMoves(possibleMoves, move){
+  let copyOfPossibleMoves = JSON.parse(JSON.stringify(possibleMoves));
+  let index = possibleMoves.find((element, index) => {
+    if(element == move){
+      return index;
+    }
+  });
+  copyOfPossibleMoves.splice(index, 1);
+
+  return copyOfPossibleMoves;
+}
+
+function getPossibleMoves(gameBoard){
   let movesArray = new Array();
 
   for(let i = 0; i < 3; i++){
     for(let j = 0; j < 3; j++){
-      let board = JSON.parse(JSON.stringify(array));
-      if(board[i][j] == ''){
-        board[i][j] = playerSymbol;
-        movesArray.push(board);
+      if(gameBoard[i][j] == ''){
+        let coordinates = [i, j];
+        movesArray.push(coordinates);
       }
     }
   }
 
   return movesArray;
 }
-
-function getIndexOfArrayDiference(arrayOne, arrayTwo) {
-  for(let i = 0; i < 3; i++) {
-    for(let j = 0; j < 3; j++) {
-      if(arrayOne[i][j] != arrayTwo[i][j]){
-        return [i, j];
-      }
-    }
-  }
-}
-
 
 setUpSelection();
