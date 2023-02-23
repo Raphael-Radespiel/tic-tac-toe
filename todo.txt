@@ -1,6 +1,0 @@
-- Add a turn number (to check for wins) and make it alternate between players that start
-- Add the win condition check
-
-- THINGS IVE NOTICED:
-The ai isn't playing the best moves
-if 'o' wins, the next turn is all circles
