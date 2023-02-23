@@ -159,7 +159,7 @@ function runHumanVsComputerGameLoop(){
 function makeComputerMove(){
   // Calculate best move
   let copyOfGameBoard = JSON.parse(JSON.stringify(gameState.gameBoard));
-  let bestMove = getBestMove(copyOfGameBoard, gameState.turnCount++); 
+  let bestMove = getBestMove(copyOfGameBoard, gameState.turnCount); 
 
   // Apply move to the board 
   renderSymbol('o', bestMove[1], bestMove[0]);
@@ -191,7 +191,6 @@ function getBestMove(node, depth){
         }
       }
     }
-
   return bestMove;
 }
 
@@ -352,38 +351,5 @@ function miniMax(node, depth, isMaximizer){
   }
 }
 
-function cloneAndModifyBoard(board, coord, player){
-  let copyOfGameBoard = JSON.parse(JSON.stringify(board));
-  copyOfGameBoard[coord[0]][coord[1]] = player;
-
-  return copyOfGameBoard;
-}
-
-function cloneAndModifyPossibleMoves(possibleMoves, move){
-  let copyOfPossibleMoves = JSON.parse(JSON.stringify(possibleMoves));
-  let index = possibleMoves.find((element, index) => {
-    if(element == move){
-      return index;
-    }
-  });
-  copyOfPossibleMoves.splice(index, 1);
-
-  return copyOfPossibleMoves;
-}
-
-function getPossibleMoves(gameBoard){
-  let movesArray = new Array();
-
-  for(let i = 0; i < 3; i++){
-    for(let j = 0; j < 3; j++){
-      if(gameBoard[i][j] == ''){
-        let coordinates = [i, j];
-        movesArray.push(coordinates);
-      }
-    }
-  }
-
-  return movesArray;
-}
-
 setUpSelection();
+
